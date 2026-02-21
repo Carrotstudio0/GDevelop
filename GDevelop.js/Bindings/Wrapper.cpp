@@ -91,6 +91,7 @@
 #include <GDCore/Project/ProjectScopedContainers.h>
 #include <GDCore/Project/PropertiesContainer.h>
 #include <GDCore/Project/PropertiesContainersList.h>
+#include <GDCore/Project/CinematicSequence.h>
 #include <GDCore/Project/PropertyDescriptor.h>
 #include <GDCore/Project/PropertyFolderOrProperty.h>
 #include <GDCore/Project/ResourcesContainer.h>

@@ -280,9 +280,7 @@ class GD_CORE_API Object {
  *
  * \see gd::Object
  */
-struct ObjectHasName : public std::binary_function<std::unique_ptr<gd::Object>,
-                                                   gd::String,
-                                                   bool> {
+struct ObjectHasName {
   bool operator()(const std::unique_ptr<gd::Object>& object,
                   const gd::String& name) const {
     return object->GetName() == name;

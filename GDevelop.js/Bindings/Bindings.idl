@@ -4380,3 +4380,34 @@ interface MetadataDeclarationHelper {
     boolean STATIC_IsExtensionLifecycleEventsFunction([Const] DOMString functionName);
     [Const, Value] DOMString STATIC_ShiftSentenceParamIndexes([Const] DOMString sentence, long offset);
 };
+
+// CinematicSequence: exposes sequence data stored in the Project.
+interface CinematicSequence {
+    void CinematicSequence();
+
+    [Const, Value] DOMString GetName();
+    void SetName([Const] DOMString name);
+
+    [Const, Value] DOMString GetSequenceData();
+    void SetSequenceData([Const] DOMString data);
+
+    [Const, Value] DOMString GetAssociatedLayout();
+    void SetAssociatedLayout([Const] DOMString name);
+
+    long GetSequenceVersion();
+    void SetSequenceVersion(long v);
+
+    // ValidateSequence returns true on success. If false, the error message is
+    // written into the provided DOMString reference.
+    boolean ValidateSequence([Ref] DOMString errorOut);
+
+    // Return an approximate duration parsed from the stored JSON (seconds).
+    double GetApproxDuration();
+
+    // Serialization helpers
+    void SerializeTo([Ref] SerializerElement element);
+    void UnserializeFrom([Ref] Project project, [Const, Ref] SerializerElement element);
+
+    // Clone
+    CinematicSequence Clone();
+};
