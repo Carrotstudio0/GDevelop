@@ -6,6 +6,9 @@ import { DebuggerEditorContainer } from '../EditorContainers/DebuggerEditorConta
 import { EventsFunctionsExtensionEditorContainer } from '../EditorContainers/EventsFunctionsExtensionEditorContainer';
 import { ExternalEventsEditorContainer } from '../EditorContainers/ExternalEventsEditorContainer';
 import { ExternalLayoutEditorContainer } from '../EditorContainers/ExternalLayoutEditorContainer';
+
+import { ExternalLayoutEditorContainer } from '../EditorContainers/ExternalLayoutEditorContainer';
+import { CinematicSequenceEditorContainer } from '../EditorContainers/CinematicSequenceEditorContainer';
 import { ResourcesEditorContainer } from '../EditorContainers/ResourcesEditorContainer';
 import { SceneEditorContainer } from '../EditorContainers/SceneEditorContainer';
 import { type HomePageEditorInterface } from '../EditorContainers/HomePage';
@@ -22,7 +25,10 @@ type EditorRef =
   | DebuggerEditorContainer
   | EventsEditorContainer
   | EventsFunctionsExtensionEditorContainer
-  | ExternalEventsEditorContainer
+  | Exter
+
+  | Exter
+  | CinematicSequenceEditorContainernalEventsEditorContainer
   | ExternalLayoutEditorContainer
   | ResourcesEditorContainer
   | SceneEditorContainer
@@ -328,7 +334,10 @@ export const saveUiSettings = (state: EditorTabsState) => {
       if (
         editorTab.editorRef &&
         (editorTab.editorRef instanceof SceneEditorContainer ||
-          editorTab.editorRef instanceof ExternalLayoutEditorContainer ||
+          editorTab.editorRef instanceof ExternalLayoutEditorContainer |
+
+          editorTab.editorRef instanceof ExternalLayoutEditorContainer |
+          editorTab.editorRef instanceof CinematicSequenceEditorContainer |||
           editorTab.editorRef instanceof CustomObjectEditorContainer)
       ) {
         editorTab.editorRef.saveUiSettings();
@@ -372,7 +381,10 @@ export const closeLayoutTabs = (
     if (
       editor instanceof EventsEditorContainer ||
       editor instanceof ExternalEventsEditorContainer ||
-      editor instanceof ExternalLayoutEditorContainer ||
+      editor instanceof ExternalLayoutEditorContainer |
+
+      editor instanceof ExternalLayoutEditorContainer |
+      editor instanceof CinematicSequenceEditorContainer |||
       editor instanceof SceneEditorContainer
     ) {
       const editorLayout = editor.getLayout();
@@ -398,6 +410,13 @@ export const closeExternalLayoutTabs = (
       return (
         !editor.getExternalLayout() ||
         editor.getExternalLayout() !== externalLayout
+      );
+    }
+
+    if (editor instanceof CinematicSequenceEditorContainer) {
+      return (
+        !editor.getCinematicSequence() ||
+        editor.getCinematicSequence() !== cinematicSequence
       );
     }
 

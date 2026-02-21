@@ -52,6 +52,9 @@ import { renderEventsEditorContainer } from './EditorContainers/EventsEditorCont
 import { renderExternalEventsEditorContainer } from './EditorContainers/ExternalEventsEditorContainer';
 import { renderSceneEditorContainer } from './EditorContainers/SceneEditorContainer';
 import { renderExternalLayoutEditorContainer } from './EditorContainers/ExternalLayoutEditorContainer';
+
+import { renderExternalLayoutEditorContainer } from './EditorContainers/ExternalLayoutEditorContainer';
+import { renderCinematicSequenceEditorContainer } from './EditorContainers/CinematicSequenceEditorContainer';
 import { renderEventsFunctionsExtensionEditorContainer } from './EditorContainers/EventsFunctionsExtensionEditorContainer';
 import { renderCustomObjectEditorContainer } from './EditorContainers/CustomObjectEditorContainer';
 import { renderHomePageContainer } from './EditorContainers/HomePage';
@@ -245,6 +248,9 @@ const editorKindToRenderer: {
   'external events': renderExternalEventsEditorContainer,
   layout: renderSceneEditorContainer,
   'external layout': renderExternalLayoutEditorContainer,
+
+  'external layout': renderExternalLayoutEditorContainer,
+  'cinematic sequence': renderCinematicSequenceEditorContainer,
   'events functions extension': renderEventsFunctionsExtensionEditorContainer,
   'custom object': renderCustomObjectEditorContainer,
   'start page': renderHomePageContainer,
@@ -2846,6 +2852,133 @@ const MainFrame = (props: Props): React.MixedElement => {
       const eventsFunctionsExtension = currentProject.getEventsFunctionsExtension(
         extensionName
       );
+
+  const openCinematicSequence = React.useCallback(
+    (name: string) => {
+      setState(state => ({
+        ...state,
+        editorTabs: openEditorTab(
+          state.editorTabs,
+          // $FlowFixMe[incompatible-type]
+          getEditorOpeningOptions({ kind: 'external layout', name })
+        ),
+      }));
+    },
+    [setState, getEditorOpeningOptions]
+  );
+
+  const openEventsFunctionsExtension = React.useCallback(
+    (
+      name: string,
+      initiallyFocusedFunctionName?: ?string,
+      initiallyFocusedBehaviorName?: ?string,
+      initiallyFocusedObjectName?: ?string
+    ) => {
+      setState(state => ({
+        ...state,
+        // $FlowFixMe[incompatible-type]
+        editorTabs: openEditorTab(state.editorTabs, {
+          ...getEditorOpeningOptions({
+            kind: 'events functions extension',
+            name,
+            project: currentProject,
+          }),
+          extraEditorProps: {
+            initiallyFocusedFunctionName,
+            initiallyFocusedBehaviorName,
+            initiallyFocusedObjectName,
+          },
+        }),
+      }));
+    },
+    [currentProject, setState, getEditorOpeningOptions]
+  );
+
+  const openResources = React.useCallback(
+    () => {
+      setState(state => ({
+        ...state,
+        editorTabs: openEditorTab(
+          state.editorTabs,
+          // $FlowFixMe[incompatible-type]
+          getEditorOpeningOptions({ kind: 'resources', name: '' })
+        ),
+      }));
+    },
+    [getEditorOpeningOptions, setState]
+  );
+
+  const openHomePage = React.useCallback(
+    () => {
+      setState(state => ({
+        ...state,
+        editorTabs: openEditorTab(
+          state.editorTabs,
+          // $FlowFixMe[incompatible-type]
+          getEditorOpeningOptions({ kind: 'start page', name: '' })
+        ),
+      }));
+    },
+    [setState, getEditorOpeningOptions]
+  );
+
+  const closeDialogsToOpenHomePage = React.useCallback(() => {
+    setShareDialogOpen(false);
+  }, []);
+
+  const openStandaloneDialog = React.useCallback(
+    () => {
+      setStandaloneDialogOpen(true);
+    },
+    [setStandaloneDialogOpen]
+  );
+
+  const { navigateToRoute } = useHomePageSwitch({
+    openHomePage,
+    closeDialogs: closeDialogsToOpenHomePage,
+  });
+
+  const _openDebugger = React.useCallback(
+    () => {
+      setState(state => ({
+        ...state,
+        editorTabs: openEditorTab(
+          state.editorTabs,
+          // $FlowFixMe[incompatible-type]
+          getEditorOpeningOptions({ kind: 'debugger', name: '' })
+        ),
+      }));
+    },
+    [getEditorOpeningOptions, setState]
+  );
+
+  const openDebugger = addCreateBadgePreHookIfNotClaimed(
+    authenticatedUser,
+    TRIVIAL_FIRST_DEBUG,
+    _openDebugger
+  );
+
+  const launchDebuggerAndPreview = React.useCallback(
+    () => {
+      openDebugger();
+      launchNewPreview();
+    },
+    [openDebugger, launchNewPreview]
+  );
+
+  const openInstructionOrExpression = (
+    extension: gdPlatformExtension,
+    type: string
+  ) => {
+    const { currentProject, editorTabs } = state;
+    if (!currentProject) return;
+
+    const extensionName = extension.getName();
+    if (currentProject.hasEventsFunctionsExtensionNamed(extensionName)) {
+      // It's an events functions extension, open the editor for it.
+      const eventsFunctionsExtension = currentProject.getEventsFunctionsExtension(
+        extensionName
+      );
       const functionName = getFunctionNameFromType(type);
       const eventsBasedEntityName = functionName.behaviorName;
 
@@ -3082,8 +3215,12 @@ const MainFrame = (props: Props): React.MixedElement => {
         reasons: ['extracted-instances-to-external-layout'],
       });
       openExternalLayout(name);
+
+      openCinematicSequence(name);
     },
     [notifyChangesToInGameEditor, openExternalLayout]
+
+    [notifyChangesToInGameEditor, openCinematicSequence]
   );
 
   const _onReloadEventsFunctionsExtensionsAsync = React.useCallback(
@@ -4752,6 +4889,8 @@ const MainFrame = (props: Props): React.MixedElement => {
     },
     onOpenExternalEvents: openExternalEvents,
     onOpenExternalLayout: openExternalLayout,
+
+    onOpenCinematicSequence: openCinematicSequence,
     onOpenEventsFunctionsExtension: openEventsFunctionsExtension,
     onOpenCommandPalette: openCommandPalette,
     onOpenProfile: onOpenProfileDialog,
@@ -5044,6 +5183,8 @@ const MainFrame = (props: Props): React.MixedElement => {
           onOpenExternalEvents={openExternalEvents}
           onOpenLayout={(name, options) => openLayout(name, options)}
           onOpenExternalLayout={openExternalLayout}
+
+          onOpenCinematicSequence={openCinematicSequence}
           onOpenEventsFunctionsExtension={openEventsFunctionsExtension}
           onDeleteLayout={deleteLayout}
           onDeleteExternalLayout={deleteExternalLayout}

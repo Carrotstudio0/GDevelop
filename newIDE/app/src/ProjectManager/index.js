@@ -111,6 +111,8 @@ const extensionsEmptyPlaceholderId = 'extensions-placeholder';
 const externalEventsEmptyPlaceholderId = 'external-events-placeholder';
 const externalLayoutEmptyPlaceholderId = 'external-layout-placeholder';
 
+const cinematicSequenceEmptyPlaceholderId = 'cinematic-sequence-placeholder';
+
 const styles = {
   listContainer: {
     flex: 1,
@@ -421,6 +423,8 @@ type Props = {|
   ...ExtensionTreeViewItemCallbacks,
   ...ExternalEventsTreeViewItemCallbacks,
   ...ExternalLayoutTreeViewItemCallbacks,
+
+  ...CinematicSequenceTreeViewItemCallbacks,
   onOpenResources: () => void,
   onReloadEventsFunctionsExtensions: () => void,
   isOpen: boolean,
@@ -432,6 +436,8 @@ type Props = {|
   onExtensionInstalled: (extensionNames: Array<string>) => void,
   onSceneAdded: () => void,
   onExternalLayoutAdded: () => void,
+
+  onCinematicSequenceAdded: () => void,
 
   // Main menu
   mainMenuCallbacks: MainMenuCallbacks,
@@ -480,6 +486,8 @@ const ProjectManager = React.forwardRef<Props, ProjectManagerInterface>(
       onExtensionInstalled,
       onSceneAdded,
       onExternalLayoutAdded,
+
+      onCinematicSequenceAdded,
     },
     ref
   ) => {
@@ -796,6 +804,15 @@ const ProjectManager = React.forwardRef<Props, ProjectManagerInterface>(
           i18n._(t`Untitled external layout`),
           name => project.hasExternalLayoutNamed(name)
         );
+
+    const addCinematicSequence = React.useCallback(
+      (index: number, i18n: I18nType) => {
+        if (!project) return;
+
+        const newName = newNameGenerator(
+          i18n._(t`Untitled external layout`),
+          name => project.hasCinematicSequenceNamed(name)
+        );
         const newExternalLayout = project.insertNewExternalLayout(
           newName,
           index + 1
@@ -812,6 +829,8 @@ const ProjectManager = React.forwardRef<Props, ProjectManagerInterface>(
           treeViewRef.current.openItems([
             externalLayoutItemId,
             externalLayoutsRootFolderId,
+
+      cinematicSequencesRootFolderId,
           ]);
         }
         // Scroll to the new behavior.
@@ -1031,6 +1050,42 @@ const ProjectManager = React.forwardRef<Props, ProjectManagerInterface>(
         onDeleteExternalLayout,
         onRenameExternalLayout,
         onOpenExternalLayout,
+      ]
+    );
+
+    const cinematicSequenceTreeViewItemProps = React.useMemo<?CinematicSequenceTreeViewItemProps>(
+      () =>
+        project
+          ? {
+              project,
+              unsavedChanges,
+              preferences,
+              gdevelopTheme,
+              forceUpdate,
+              forceUpdateList,
+              showDeleteConfirmation,
+              editName,
+              scrollToItem,
+              onCinematicSequenceAdded,
+              onDeleteCinematicSequence,
+              onRenameCinematicSequence,
+              onOpenCinematicSequence,
+            }
+          : null,
+      [
+        project,
+        unsavedChanges,
+        preferences,
+        gdevelopTheme,
+        forceUpdate,
+        forceUpdateList,
+        showDeleteConfirmation,
+        editName,
+        scrollToItem,
+        onCinematicSequenceAdded,
+        onDeleteCinematicSequence,
+        onRenameCinematicSequence,
+        onOpenCinematicSequence,
       ]
     );
 
