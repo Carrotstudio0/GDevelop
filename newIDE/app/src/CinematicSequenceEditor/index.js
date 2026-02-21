@@ -18,6 +18,8 @@ import FastRewind from '@material-ui/icons/FastRewind';
 import Menu from '../UI/Menu/Menu';
 import ContextMenu from '../UI/Menu/ContextMenu';
 import Tracer from './tracer';
+import Dialog, { DialogPrimaryButton } from '../UI/Dialog';
+import SemiControlledTextField from '../UI/SemiControlledTextField';
 
 const styles = {
   container: {
@@ -96,6 +98,8 @@ export default class CinematicSequenceEditor extends React.Component {
       duration: 10, // Default 10 seconds
       tracks: this._parseTracks(),
       zoom: 100, // pixels per second
+      editingTrack: null,
+      editingKeyframe: null,
     };
   }
 
@@ -218,6 +222,73 @@ export default class CinematicSequenceEditor extends React.Component {
     this._saveTracks(tracks);
   };
 
+  _editTrack = track => {
+    this.setState({ editingTrack: { id: track.id, name: track.name } });
+  };
+
+  _saveTrackName = () => {
+    const { editingTrack, tracks } = this.state;
+    if (editingTrack) {
+      const newTracks = tracks.map(t =>
+        t.id === editingTrack.id ? { ...t, name: editingTrack.name } : t
+      );
+      this._saveTracks(newTracks);
+    }
+    this.setState({ editingTrack: null });
+  };
+
+  _editKeyframe = (trackId, index) => {
+    const track = this.state.tracks.find(t => t.id === trackId);
+    if (!track) return;
+    const kf = track.keyframes[index];
+    this.setState({
+      editingKeyframe: {
+        trackId,
+        index,
+        time: String(kf.time),
+        x: kf.value && kf.value.x !== undefined ? String(kf.value.x) : '',
+        y: kf.value && kf.value.y !== undefined ? String(kf.value.y) : '',
+        angle:
+          kf.value && kf.value.angle !== undefined
+            ? String(kf.value.angle)
+            : '',
+      },
+    });
+  };
+
+  _saveKeyframe = () => {
+    const { editingKeyframe, tracks } = this.state;
+    if (editingKeyframe) {
+      const { trackId, index, time, x, y, angle } = editingKeyframe;
+      let parsedTime = parseFloat(time);
+      if (isNaN(parsedTime)) parsedTime = 0;
+
+      const parsedX = x !== '' ? parseFloat(x) : undefined;
+      const parsedY = y !== '' ? parseFloat(y) : undefined;
+      const parsedAngle = angle !== '' ? parseFloat(angle) : undefined;
+
+      const newTracks = tracks.map(t => {
+        if (t.id === trackId) {
+          const newKfs = [...t.keyframes];
+          newKfs[index] = {
+            ...newKfs[index],
+            time: Math.max(0, parsedTime),
+            value: {
+              ...(parsedX !== undefined && { x: parsedX }),
+              ...(parsedY !== undefined && { y: parsedY }),
+              ...(parsedAngle !== undefined && { angle: parsedAngle }),
+            },
+          };
+          newKfs.sort((a, b) => a.time - b.time);
+          return { ...t, keyframes: newKfs };
+        }
+        return t;
+      });
+      this._saveTracks(newTracks);
+    }
+    this.setState({ editingKeyframe: null });
+  };
+
   _handleTimelineClick = e => {
     if (!this._timelineRef.current) return;
     const rect = this._timelineRef.current.getBoundingClientRect();
@@ -297,9 +368,19 @@ export default class CinematicSequenceEditor extends React.Component {
                             padding: '0 8px',
                           }}
                         >
-                          <Text>{track.name}</Text>
                           <span
-                            style={{ cursor: 'pointer', color: 'red' }}
+                            style={{ cursor: 'pointer', flex: 1 }}
+                            onDoubleClick={() => this._editTrack(track)}
+                            title={i18n._(t`Double click to edit track`)}
+                          >
+                            <Text>{track.name}</Text>
+                          </span>
+                          <span
+                            style={{
+                              cursor: 'pointer',
+                              color: 'red',
+                              marginLeft: 8,
+                            }}
                             onClick={() => this._removeTrack(track.id)}
                           >
                             ✕
@@ -345,7 +426,13 @@ export default class CinematicSequenceEditor extends React.Component {
                               onClick={e => {
                                 e.stopPropagation(); /* select keyframe */
                               }}
-                              title={`${kf.time.toFixed(2)}s`}
+                              onDoubleClick={e => {
+                                e.stopPropagation();
+                                this._editKeyframe(track.id, i);
+                              }}
+                              title={`${kf.time.toFixed(
+                                2
+                              )}s\n(Double click to edit)`}
                             />
                           ))}
                         </div>
@@ -353,6 +440,123 @@ export default class CinematicSequenceEditor extends React.Component {
                     </div>
                   </div>
                 </div>
+
+                {this.state.editingTrack && (
+                  <Dialog
+                    title={i18n._(t`Edit Track`)}
+                    actions={[
+                      <FlatButton
+                        key="cancel"
+                        label={i18n._(t`Cancel`)}
+                        keyboardFocused={false}
+                        onClick={() => this.setState({ editingTrack: null })}
+                      />,
+                      <DialogPrimaryButton
+                        key="apply"
+                        label={i18n._(t`Apply`)}
+                        primary={true}
+                        onClick={this._saveTrackName}
+                      />,
+                    ]}
+                    open
+                    onRequestClose={() => this.setState({ editingTrack: null })}
+                  >
+                    <Column expand>
+                      <SemiControlledTextField
+                        commitOnBlur
+                        floatingLabelText={i18n._(t`Object Name`)}
+                        value={this.state.editingTrack.name}
+                        onChange={text =>
+                          this.setState({
+                            editingTrack: {
+                              ...this.state.editingTrack,
+                              name: text,
+                            },
+                          })
+                        }
+                      />
+                    </Column>
+                  </Dialog>
+                )}
+
+                {this.state.editingKeyframe && (
+                  <Dialog
+                    title={i18n._(t`Edit Keyframe`)}
+                    actions={[
+                      <FlatButton
+                        key="cancel"
+                        label={i18n._(t`Cancel`)}
+                        keyboardFocused={false}
+                        onClick={() => this.setState({ editingKeyframe: null })}
+                      />,
+                      <DialogPrimaryButton
+                        key="apply"
+                        label={i18n._(t`Apply`)}
+                        primary={true}
+                        onClick={this._saveKeyframe}
+                      />,
+                    ]}
+                    open
+                    onRequestClose={() =>
+                      this.setState({ editingKeyframe: null })
+                    }
+                  >
+                    <Column expand>
+                      <SemiControlledTextField
+                        commitOnBlur
+                        floatingLabelText={i18n._(t`Time (s)`)}
+                        value={this.state.editingKeyframe.time}
+                        onChange={text =>
+                          this.setState({
+                            editingKeyframe: {
+                              ...this.state.editingKeyframe,
+                              time: text,
+                            },
+                          })
+                        }
+                      />
+                      <SemiControlledTextField
+                        commitOnBlur
+                        floatingLabelText={i18n._(t`X Position`)}
+                        value={this.state.editingKeyframe.x}
+                        onChange={text =>
+                          this.setState({
+                            editingKeyframe: {
+                              ...this.state.editingKeyframe,
+                              x: text,
+                            },
+                          })
+                        }
+                      />
+                      <SemiControlledTextField
+                        commitOnBlur
+                        floatingLabelText={i18n._(t`Y Position`)}
+                        value={this.state.editingKeyframe.y}
+                        onChange={text =>
+                          this.setState({
+                            editingKeyframe: {
+                              ...this.state.editingKeyframe,
+                              y: text,
+                            },
+                          })
+                        }
+                      />
+                      <SemiControlledTextField
+                        commitOnBlur
+                        floatingLabelText={i18n._(t`Angle`)}
+                        value={this.state.editingKeyframe.angle}
+                        onChange={text =>
+                          this.setState({
+                            editingKeyframe: {
+                              ...this.state.editingKeyframe,
+                              angle: text,
+                            },
+                          })
+                        }
+                      />
+                    </Column>
+                  </Dialog>
+                )}
               </div>
             )}
           </I18n>
