@@ -77,7 +77,30 @@ class GD_CORE_API CinematicSequence {
  private:
   gd::String name;
   gd::String sequenceData;    // JSON representation of Tracks/Keyframes
+  int sequenceVersion = 1;    // Schema version for the stored JSON
   gd::String associatedLayout; // Used to know in which layout we preview
+
+ public:
+  /**
+   * \brief Get/Set the stored sequence schema version.
+   */
+  int GetSequenceVersion() const { return sequenceVersion; }
+  void SetSequenceVersion(int v) { sequenceVersion = v; }
+
+  /**
+   * \brief Basic validation for the stored JSON sequence.
+   * This is a lightweight check: it verifies presence of required fields
+   * and returns false with an error message in `errorOut` if invalid.
+   * A full JSON validation should be performed by the IDE using the schema.
+   */
+  bool ValidateSequence(gd::String &errorOut) const;
+
+  /**
+   * \brief Try to extract an approximate duration from the stored JSON.
+   * This performs a simple textual search for a "duration" field and
+   * returns it when found. Returns 0 if not present or on parse error.
+   */
+  double GetApproxDuration() const;
 };
 
 }  // namespace gd

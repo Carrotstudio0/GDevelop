@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cinematic Sequence Schema",
+  "description": "Schema v1 for cinematic sequence data used by GDevelop (tracks/keyframes).",
+  "type": "object",
+  "required": ["version", "duration", "tracks"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Schema version. Increment when changing layout."
+    },
+    "meta": {
+      "type": "object",
+      "description": "Optional metadata for the sequence (author, createdAt, description)",
+      "additionalProperties": true
+    },
+    "duration": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Overall duration of the sequence in seconds."
+    },
+    "tracks": {
+      "type": "array",
+      "description": "Array of tracks composing the cinematic sequence.",
+      "items": { "$ref": "#/definitions/track" }
+    }
+  },
+  "definitions": {
+    "track": {
+      "type": "object",
+      "required": ["id", "name", "type", "keyframes"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "description": "Unique track id." },
+        "name": { "type": "string", "description": "Human name for the track (object name, camera id...)." },
+        "type": { "type": "string", "enum": ["object", "camera", "property", "animation", "custom"], "description": "Track semantic type." },
+        "params": { "type": "object", "description": "Optional track-specific parameters.", "additionalProperties": true },
+        "keyframes": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/keyframe" }
+        }
+      }
+    },
+    "keyframe": {
+      "type": "object",
+      "required": ["time", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "time": { "type": "number", "minimum": 0, "description": "Time in seconds." },
+        "easing": { "type": "string", "description": "Optional easing identifier (e.g. linear, easeInOut)." },
+        "value": {
+          "description": "Keyframe value. For object tracks, this can be an object with x/y/angle or custom properties.",
+          "oneOf": [
+            { "type": "number" },
+            { "type": "string" },
+            { "type": "object", "additionalProperties": true }
+          ]
+        }
+      }
+    }
+  }
+}

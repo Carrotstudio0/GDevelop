@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "meta": {
+    "author": "Example",
+    "createdAt": "2026-02-22T00:00:00Z",
+    "description": "Simple example cinematic sequence"
+  },
+  "duration": 5.0,
+  "tracks": [
+    {
+      "id": "t1",
+      "name": "Player",
+      "type": "object",
+      "params": {},
+      "keyframes": [
+        { "time": 0.0, "value": { "x": 100, "y": 200, "angle": 0 } },
+        { "time": 2.5, "value": { "x": 300, "y": 200, "angle": 0 } },
+        { "time": 5.0, "value": { "x": 500, "y": 200, "angle": 0 } }
+      ]
+    },
+    {
+      "id": "t2",
+      "name": "MainCamera",
+      "type": "camera",
+      "params": { "target": "Player" },
+      "keyframes": [
+        { "time": 0.0, "value": { "x": 0, "y": 0, "zoom": 1 } },
+        { "time": 5.0, "value": { "x": 200, "y": 0, "zoom": 1.2 } }
+      ]
+    }
+  ]
+}
