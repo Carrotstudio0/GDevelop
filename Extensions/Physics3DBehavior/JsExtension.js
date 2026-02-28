@@ -1663,19 +1663,6 @@ module.exports = {
 
       aut
         .addExpression(
-          'MassCenterY',
-          _('Mass center Y'),
-          _('Mass center Y'),
-          '',
-          'JsPlatform/Extensions/physics3d.svg'
-        )
-        .addParameter('object', _('Object'), '', false)
-        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
-        .getCodeExtraInformation()
-        .setFunctionName('getMassCenterY');
-
-      aut
-        .addExpression(
           'MassCenterZ',
           _('Mass center Z'),
           _('Mass center Z'),
@@ -1686,6 +1673,298 @@ module.exports = {
         .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
         .getCodeExtraInformation()
         .setFunctionName('getMassCenterZ');
+
+      // Joints
+      aut
+        .addScopedAction(
+          'AddFixedJoint',
+          _('Add a fixed joint'),
+          _('Add a fixed joint between two objects. They will be linked together and move as a single object.'),
+          _('Add a fixed joint between _PARAM0_ and _PARAM2_, save the joint ID in _PARAM3_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('object', _('Other object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('scenevar', _('Variable where to store the joint ID'))
+        .setFunctionName('addFixedJoint');
+
+      aut
+        .addScopedAction(
+          'AddPointJoint',
+          _('Add a point (ball and socket) joint'),
+          _('Add a point joint between two objects. They will be linked together at a given world position, but will be able to rotate freely.'),
+          _('Add a point joint between _PARAM0_ and _PARAM2_ at _PARAM4_;_PARAM5_;_PARAM6_, save ID in _PARAM7_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('object', _('Other object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint position X'))
+        .addParameter('expression', _('Joint position Y'))
+        .addParameter('expression', _('Joint position Z'))
+        .addParameter('scenevar', _('Variable where to store the joint ID'))
+        .setFunctionName('addPointJoint');
+
+      aut
+        .addScopedAction(
+          'AddHingeJoint',
+          _('Add a hinge joint'),
+          _('Add a hinge joint. Both objects will be linked together at a given position and allowed to rotate around the given axis.'),
+          _('Add a hinge joint between _PARAM0_ and _PARAM2_ at position _PARAM4_;_PARAM5_;_PARAM6_ around axis _PARAM7_;_PARAM8_;_PARAM9_, save ID in _PARAM10_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('object', _('Other object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint position X'))
+        .addParameter('expression', _('Joint position Y'))
+        .addParameter('expression', _('Joint position Z'))
+        .addParameter('expression', _('Axis X'))
+        .addParameter('expression', _('Axis Y'))
+        .addParameter('expression', _('Axis Z'))
+        .addParameter('scenevar', _('Variable where to store the joint ID'))
+        .setFunctionName('addHingeJoint');
+
+      aut
+        .addScopedAction(
+          'AddSliderJoint',
+          _('Add a slider joint'),
+          _('Add a slider joint. Both objects will be linked but allowed to slide along an axis.'),
+          _('Add a slider joint between _PARAM0_ and _PARAM2_ on axis _PARAM4_;_PARAM5_;_PARAM6_, save ID in _PARAM7_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('object', _('Other object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Axis X'))
+        .addParameter('expression', _('Axis Y'))
+        .addParameter('expression', _('Axis Z'))
+        .addParameter('scenevar', _('Variable where to store the joint ID'))
+        .setFunctionName('addSliderJoint');
+
+      aut
+        .addScopedAction(
+          'AddDistanceJoint',
+          _('Add a distance joint'),
+          _('Add a distance joint. Keeps a minimum and maximum distance between the center of mass of both objects, optionally using a spring.'),
+          _('Add a distance joint between _PARAM0_ and _PARAM2_ (min: _PARAM4_, max: _PARAM5_, spring freq: _PARAM6_, damping: _PARAM7_), save ID to _PARAM8_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('object', _('Other object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Minimum distance (pixels)'))
+        .addParameter('expression', _('Maximum distance (pixels)'))
+        .addParameter('expression', _('Spring frequency (0 to disable)'))
+        .addParameter('expression', _('Spring damping ratio (e.g. 0.5)'))
+        .addParameter('scenevar', _('Variable where to store the joint ID'))
+        .setFunctionName('addDistanceJoint');
+
+      aut
+        .addScopedAction(
+          'AddConeJoint',
+          _('Add a cone joint'),
+          _('Add a cone joint. Constraints the movement to a cone shape around a twist axis.'),
+          _('Add a cone joint between _PARAM0_ and _PARAM2_ at _PARAM4_;_PARAM5_;_PARAM6_ (twist axis _PARAM7_;_PARAM8_;_PARAM9_, half angle _PARAM10_°), save ID to _PARAM11_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('object', _('Other object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint position X'))
+        .addParameter('expression', _('Joint position Y'))
+        .addParameter('expression', _('Joint position Z'))
+        .addParameter('expression', _('Twist axis X'))
+        .addParameter('expression', _('Twist axis Y'))
+        .addParameter('expression', _('Twist axis Z'))
+        .addParameter('expression', _('Half cone angle (degrees)'))
+        .addParameter('scenevar', _('Variable where to store the joint ID'))
+        .setFunctionName('addConeJoint');
+
+      aut
+        .addScopedAction(
+          'RemoveJoint',
+          _('Remove a joint'),
+          _('Remove a joint by its ID.'),
+          _('Remove the joint _PARAM2_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('removeJoint');
+
+      aut
+        .addScopedCondition(
+          'IsJointFirstObject',
+          _('Is first object in a joint'),
+          _('Check if an object is the first object in a specific joint.'),
+          _('_PARAM0_ is the first object of joint _PARAM2_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('isJointFirstObject');
+
+      aut
+        .addScopedCondition(
+          'IsJointSecondObject',
+          _('Is second object in a joint'),
+          _('Check if an object is the second object in a specific joint.'),
+          _('_PARAM0_ is the second object of joint _PARAM2_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('isJointSecondObject');
+
+      aut
+        .addScopedAction(
+          'SetHingeJointLimits',
+          _('Set hinge joint limits'),
+          _('Set the min and max angles for a hinge joint.'),
+          _('Set hinge joint _PARAM2_ limits (min: _PARAM3_°, max: _PARAM4_°)'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Min angle (degrees)'))
+        .addParameter('expression', _('Max angle (degrees)'))
+        .setFunctionName('setHingeJointLimits');
+
+      aut
+        .addScopedAction(
+          'SetHingeJointMotor',
+          _('Set hinge joint motor'),
+          _('Set the motor state and target for a hinge joint.'),
+          _('Set hinge joint _PARAM2_ motor state to _PARAM3_ (target: _PARAM4_)'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter(
+          'stringWithSelector',
+          _('Motor State'),
+          '["Off", "Velocity", "Position"]',
+          false
+        )
+        .addParameter('expression', _('Target velocity (deg/s) or angle (deg)'))
+        .setFunctionName('setHingeJointMotor');
+
+      aut
+        .addExpression(
+          'HingeJointAngle',
+          _('Hinge joint angle'),
+          _('Return the current angle of a hinge joint (in degrees).'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getHingeJointAngle');
+
+      aut
+        .addScopedAction(
+          'SetSliderJointLimits',
+          _('Set slider joint limits'),
+          _('Set the min and max distance for a slider joint.'),
+          _('Set slider joint _PARAM2_ limits (min: _PARAM3_ px, max: _PARAM4_ px)'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Min limit (pixels)'))
+        .addParameter('expression', _('Max limit (pixels)'))
+        .setFunctionName('setSliderJointLimits');
+
+      aut
+        .addScopedAction(
+          'SetSliderJointMotor',
+          _('Set slider joint motor'),
+          _('Set the motor state and target for a slider joint.'),
+          _('Set slider joint _PARAM2_ motor state to _PARAM3_ (target: _PARAM4_)'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter(
+          'stringWithSelector',
+          _('Motor State'),
+          '["Off", "Velocity", "Position"]',
+          false
+        )
+        .addParameter('expression', _('Target velocity (px/s) or pos. (px)'))
+        .setFunctionName('setSliderJointMotor');
+
+      aut
+        .addExpression(
+          'SliderJointPosition',
+          _('Slider joint position'),
+          _('Return the current position of a slider joint (in pixels).'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getSliderJointPosition');
+
+      aut
+        .addScopedAction(
+          'SetDistanceJointDistance',
+          _('Set distance joint limits'),
+          _('Set the min and max distance for a distance joint.'),
+          _('Set distance joint _PARAM2_ distance (min: _PARAM3_ px, max: _PARAM4_ px)'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Min distance (pixels)'))
+        .addParameter('expression', _('Max distance (pixels)'))
+        .setFunctionName('setDistanceJointDistance');
     }
     // Collision
     extension

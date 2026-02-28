@@ -90,6 +90,11 @@ namespace gdjs {
     private _physics3DHooks: Array<gdjs.Physics3DRuntimeBehavior.Physics3DHook> =
       [];
 
+    /** Next joint ID counter */
+    _nextJointId: number = 1;
+    /** Map of (string)jointId -> (Jolt.Constraint)constraint */
+    joints: { [key: string]: Jolt.Constraint } = {};
+
     constructor(instanceContainer: gdjs.RuntimeInstanceContainer, sharedData) {
       this._registeredBehaviors = new Set<Physics3DRuntimeBehavior>();
       this.gravityX = sharedData.gravityX;
@@ -257,6 +262,72 @@ namespace gdjs {
       this._registeredBehaviors.delete(physicsBehavior);
     }
 
+    /**
+     * Add a constraint to the tracked joints and return its ID.
+     */
+    addJoint(constraint: Jolt.Constraint): integer {
+      this.joints[this._nextJointId.toString(10)] = constraint;
+      return this._nextJointId++;
+    }
+
+    /**
+     * Get a constraint by joint ID.
+     */
+    getJoint(jointId: integer | string): Jolt.Constraint | null {
+      jointId = jointId.toString(10);
+      if (this.joints.hasOwnProperty(jointId)) {
+        return this.joints[jointId];
+      }
+      return null;
+    }
+
+    /**
+     * Find the joint ID of a given constraint.
+     */
+    getJointId(constraint: Jolt.Constraint): integer {
+      for (const jointId in this.joints) {
+        if (this.joints.hasOwnProperty(jointId)) {
+          if (this.joints[jointId] === constraint) {
+            return parseInt(jointId, 10);
+          }
+        }
+      }
+      return 0;
+    }
+
+    /**
+     * Remove a constraint by joint ID.
+     */
+    removeJoint(jointId: integer | string): void {
+      jointId = jointId.toString(10);
+      if (this.joints.hasOwnProperty(jointId)) {
+        const constraint = this.joints[jointId];
+        Jolt.destroy(constraint);
+        delete this.joints[jointId];
+      }
+    }
+
+    /**
+     * Remove all joints associated with a body (called when a body is destroyed).
+     */
+    removeJointsWithBody(body: Jolt.Body): void {
+      for (const jointId in this.joints) {
+        if (this.joints.hasOwnProperty(jointId)) {
+          const constraint = this.joints[jointId];
+          const twoBodyConstraint = Jolt.castObject(
+            constraint,
+            Jolt.TwoBodyConstraint
+          );
+          if (
+            twoBodyConstraint.GetBody1() === body ||
+            twoBodyConstraint.GetBody2() === body
+          ) {
+            this.removeJoint(jointId);
+          }
+        }
+      }
+    }
+
     step(deltaTime: float): void {
       for (const physicsBehavior of this._registeredBehaviors) {
         physicsBehavior._contactsStartedThisFrame.length = 0;
@@ -295,6 +366,13 @@ namespace gdjs {
   gdjs.registerRuntimeSceneUnloadedCallback(function (runtimeScene) {
     const physics3DSharedData = runtimeScene.physics3DSharedData;
     if (physics3DSharedData) {
+      // Destroy all joints before destroying the physics world
+      for (const jointId in physics3DSharedData.joints) {
+        if (physics3DSharedData.joints.hasOwnProperty(jointId)) {
+          Jolt.destroy(physics3DSharedData.joints[jointId]);
+        }
+      }
+      physics3DSharedData.joints = {};
       Jolt.destroy(physics3DSharedData.contactListener);
       Jolt.destroy(physics3DSharedData._tempVec3);
       Jolt.destroy(physics3DSharedData._tempRVec3);
@@ -663,6 +741,10 @@ namespace gdjs {
     }
 
     _destroyBody() {
+      // Remove all joints associated with this body before destroying it
+      if (this._body !== null) {
+        this._sharedData.removeJointsWithBody(this._body);
+      }
       this.bodyUpdater.destroyBody();
       this._contactsEndedThisFrame.length = 0;
       this._contactsStartedThisFrame.length = 0;
@@ -2083,6 +2165,551 @@ namespace gdjs {
       ) as Physics3DRuntimeBehavior | null;
       if (!behavior1) return false;
       return behavior1.collisionChecker.hasCollisionStoppedWith(object2);
+    }
+
+    // ==================== Joint Methods ====================
+
+    /**
+     * Get the other physics behavior from a picked object.
+     */
+    private _getOtherBody(
+      otherObject: gdjs.RuntimeObject,
+      otherBehaviorName: string
+    ): Jolt.Body | null {
+      const otherBehavior = otherObject.getBehavior(
+        otherBehaviorName
+      ) as Physics3DRuntimeBehavior | null;
+      if (!otherBehavior) return null;
+      return otherBehavior.getBody();
+    }
+
+    /**
+     * Add a Fixed joint between this object and another.
+     * Both objects are locked together with no relative movement.
+     */
+    addFixedJoint(
+      otherObject: gdjs.RuntimeObject,
+      otherBehaviorName: string,
+      variable: gdjs.Variable
+    ): void {
+      if (this._body === null) {
+        if (!this._createBody()) return;
+      }
+      const body = this._body!;
+      const otherBody = this._getOtherBody(otherObject, otherBehaviorName);
+      if (!otherBody) return;
+
+      const settings = new Jolt.FixedConstraintSettings();
+      settings.mAutoDetectPoint = true;
+      settings.mSpace = Jolt.EConstraintSpace_WorldSpace;
+
+      const constraint = this._sharedData.bodyInterface.CreateConstraint(
+        settings,
+        body.GetID(),
+        otherBody.GetID()
+      );
+      Jolt.destroy(settings);
+
+      this._sharedData.bodyInterface.ActivateConstraint(
+        Jolt.castObject(constraint, Jolt.TwoBodyConstraint)
+      );
+      const jointId = this._sharedData.addJoint(constraint);
+      variable.setNumber(jointId);
+    }
+
+    /**
+     * Add a Point (Ball & Socket) joint between this object and another.
+     * Both objects are connected at a point but can rotate freely.
+     */
+    addPointJoint(
+      otherObject: gdjs.RuntimeObject,
+      otherBehaviorName: string,
+      anchorX: float,
+      anchorY: float,
+      anchorZ: float,
+      variable: gdjs.Variable
+    ): void {
+      if (this._body === null) {
+        if (!this._createBody()) return;
+      }
+      const body = this._body!;
+      const otherBody = this._getOtherBody(otherObject, otherBehaviorName);
+      if (!otherBody) return;
+
+      const worldInvScale = this._sharedData.worldInvScale;
+      const settings = new Jolt.PointConstraintSettings();
+      settings.mSpace = Jolt.EConstraintSpace_WorldSpace;
+      settings.mPoint1 = this._sharedData.getRVec3(
+        anchorX * worldInvScale,
+        anchorY * worldInvScale,
+        anchorZ * worldInvScale
+      );
+      settings.mPoint2 = this._sharedData.getRVec3(
+        anchorX * worldInvScale,
+        anchorY * worldInvScale,
+        anchorZ * worldInvScale
+      );
+
+      const constraint = this._sharedData.bodyInterface.CreateConstraint(
+        settings,
+        body.GetID(),
+        otherBody.GetID()
+      );
+      Jolt.destroy(settings);
+
+      this._sharedData.bodyInterface.ActivateConstraint(
+        Jolt.castObject(constraint, Jolt.TwoBodyConstraint)
+      );
+      const jointId = this._sharedData.addJoint(constraint);
+      variable.setNumber(jointId);
+    }
+
+    /**
+     * Add a Hinge joint between this object and another.
+     * Allows rotation around a single axis, with optional limits and motor.
+     */
+    addHingeJoint(
+      otherObject: gdjs.RuntimeObject,
+      otherBehaviorName: string,
+      anchorX: float,
+      anchorY: float,
+      anchorZ: float,
+      axisX: float,
+      axisY: float,
+      axisZ: float,
+      variable: gdjs.Variable
+    ): void {
+      if (this._body === null) {
+        if (!this._createBody()) return;
+      }
+      const body = this._body!;
+      const otherBody = this._getOtherBody(otherObject, otherBehaviorName);
+      if (!otherBody) return;
+
+      const worldInvScale = this._sharedData.worldInvScale;
+      const settings = new Jolt.HingeConstraintSettings();
+      settings.mSpace = Jolt.EConstraintSpace_WorldSpace;
+      settings.mPoint1 = this._sharedData.getRVec3(
+        anchorX * worldInvScale,
+        anchorY * worldInvScale,
+        anchorZ * worldInvScale
+      );
+      settings.mPoint2 = this._sharedData.getRVec3(
+        anchorX * worldInvScale,
+        anchorY * worldInvScale,
+        anchorZ * worldInvScale
+      );
+      // Normalize axis
+      const axisLen = Math.sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
+      if (axisLen > 0) {
+        axisX /= axisLen;
+        axisY /= axisLen;
+        axisZ /= axisLen;
+      } else {
+        axisY = 1; // Default up axis
+      }
+      settings.mHingeAxis1 = this._sharedData.getVec3(axisX, axisY, axisZ);
+      settings.mHingeAxis2 = this._sharedData.getVec3(axisX, axisY, axisZ);
+      // Compute a perpendicular normal axis
+      let normalX: float, normalY: float, normalZ: float;
+      if (Math.abs(axisX) < 0.9) {
+        // Cross with X axis
+        normalX = 0;
+        normalY = -axisZ;
+        normalZ = axisY;
+      } else {
+        // Cross with Y axis
+        normalX = axisZ;
+        normalY = 0;
+        normalZ = -axisX;
+      }
+      const normalLen = Math.sqrt(
+        normalX * normalX + normalY * normalY + normalZ * normalZ
+      );
+      if (normalLen > 0) {
+        normalX /= normalLen;
+        normalY /= normalLen;
+        normalZ /= normalLen;
+      }
+      settings.mNormalAxis1 = this._sharedData.getVec3(
+        normalX,
+        normalY,
+        normalZ
+      );
+      settings.mNormalAxis2 = this._sharedData.getVec3(
+        normalX,
+        normalY,
+        normalZ
+      );
+
+      const constraint = this._sharedData.bodyInterface.CreateConstraint(
+        settings,
+        body.GetID(),
+        otherBody.GetID()
+      );
+      Jolt.destroy(settings);
+
+      this._sharedData.bodyInterface.ActivateConstraint(
+        Jolt.castObject(constraint, Jolt.TwoBodyConstraint)
+      );
+      const jointId = this._sharedData.addJoint(constraint);
+      variable.setNumber(jointId);
+    }
+
+    /**
+     * Add a Slider (Prismatic) joint between this object and another.
+     * Allows translation along a single axis.
+     */
+    addSliderJoint(
+      otherObject: gdjs.RuntimeObject,
+      otherBehaviorName: string,
+      axisX: float,
+      axisY: float,
+      axisZ: float,
+      variable: gdjs.Variable
+    ): void {
+      if (this._body === null) {
+        if (!this._createBody()) return;
+      }
+      const body = this._body!;
+      const otherBody = this._getOtherBody(otherObject, otherBehaviorName);
+      if (!otherBody) return;
+
+      const settings = new Jolt.SliderConstraintSettings();
+      settings.mAutoDetectPoint = true;
+      settings.mSpace = Jolt.EConstraintSpace_WorldSpace;
+      // Normalize axis
+      const axisLen = Math.sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
+      if (axisLen > 0) {
+        axisX /= axisLen;
+        axisY /= axisLen;
+        axisZ /= axisLen;
+      } else {
+        axisX = 1; // Default X axis
+      }
+      settings.mSliderAxis1 = this._sharedData.getVec3(axisX, axisY, axisZ);
+      settings.mSliderAxis2 = this._sharedData.getVec3(axisX, axisY, axisZ);
+
+      const constraint = this._sharedData.bodyInterface.CreateConstraint(
+        settings,
+        body.GetID(),
+        otherBody.GetID()
+      );
+      Jolt.destroy(settings);
+
+      this._sharedData.bodyInterface.ActivateConstraint(
+        Jolt.castObject(constraint, Jolt.TwoBodyConstraint)
+      );
+      const jointId = this._sharedData.addJoint(constraint);
+      variable.setNumber(jointId);
+    }
+
+    /**
+     * Add a Distance joint between this object and another.
+     * Keeps a min/max distance between two objects, optionally with a spring.
+     */
+    addDistanceJoint(
+      otherObject: gdjs.RuntimeObject,
+      otherBehaviorName: string,
+      minDistance: float,
+      maxDistance: float,
+      springFrequency: float,
+      springDamping: float,
+      variable: gdjs.Variable
+    ): void {
+      if (this._body === null) {
+        if (!this._createBody()) return;
+      }
+      const body = this._body!;
+      const otherBody = this._getOtherBody(otherObject, otherBehaviorName);
+      if (!otherBody) return;
+
+      const worldInvScale = this._sharedData.worldInvScale;
+      const settings = new Jolt.DistanceConstraintSettings();
+      settings.mSpace = Jolt.EConstraintSpace_WorldSpace;
+      // Use centers of mass for points
+      const pos1 = body.GetCenterOfMassPosition();
+      const pos2 = otherBody.GetCenterOfMassPosition();
+      settings.mPoint1 = this._sharedData.getRVec3(
+        pos1.GetX(),
+        pos1.GetY(),
+        pos1.GetZ()
+      );
+      settings.mPoint2 = this._sharedData.getRVec3(
+        pos2.GetX(),
+        pos2.GetY(),
+        pos2.GetZ()
+      );
+      settings.mMinDistance = minDistance * worldInvScale;
+      settings.mMaxDistance = maxDistance * worldInvScale;
+      if (springFrequency > 0) {
+        settings.mLimitsSpringSettings.mFrequency = springFrequency;
+        settings.mLimitsSpringSettings.mDamping = springDamping;
+      }
+
+      const constraint = this._sharedData.bodyInterface.CreateConstraint(
+        settings,
+        body.GetID(),
+        otherBody.GetID()
+      );
+      Jolt.destroy(settings);
+
+      this._sharedData.bodyInterface.ActivateConstraint(
+        Jolt.castObject(constraint, Jolt.TwoBodyConstraint)
+      );
+      const jointId = this._sharedData.addJoint(constraint);
+      variable.setNumber(jointId);
+    }
+
+    /**
+     * Add a Cone joint between this object and another.
+     * Restricts the rotation within a cone shape.
+     */
+    addConeJoint(
+      otherObject: gdjs.RuntimeObject,
+      otherBehaviorName: string,
+      anchorX: float,
+      anchorY: float,
+      anchorZ: float,
+      twistAxisX: float,
+      twistAxisY: float,
+      twistAxisZ: float,
+      halfConeAngle: float,
+      variable: gdjs.Variable
+    ): void {
+      if (this._body === null) {
+        if (!this._createBody()) return;
+      }
+      const body = this._body!;
+      const otherBody = this._getOtherBody(otherObject, otherBehaviorName);
+      if (!otherBody) return;
+
+      const worldInvScale = this._sharedData.worldInvScale;
+      const settings = new Jolt.ConeConstraintSettings();
+      settings.mSpace = Jolt.EConstraintSpace_WorldSpace;
+      settings.mPoint1 = this._sharedData.getRVec3(
+        anchorX * worldInvScale,
+        anchorY * worldInvScale,
+        anchorZ * worldInvScale
+      );
+      settings.mPoint2 = this._sharedData.getRVec3(
+        anchorX * worldInvScale,
+        anchorY * worldInvScale,
+        anchorZ * worldInvScale
+      );
+      // Normalize twist axis
+      const axisLen = Math.sqrt(
+        twistAxisX * twistAxisX +
+          twistAxisY * twistAxisY +
+          twistAxisZ * twistAxisZ
+      );
+      if (axisLen > 0) {
+        twistAxisX /= axisLen;
+        twistAxisY /= axisLen;
+        twistAxisZ /= axisLen;
+      } else {
+        twistAxisY = 1;
+      }
+      settings.mTwistAxis1 = this._sharedData.getVec3(
+        twistAxisX,
+        twistAxisY,
+        twistAxisZ
+      );
+      settings.mTwistAxis2 = this._sharedData.getVec3(
+        twistAxisX,
+        twistAxisY,
+        twistAxisZ
+      );
+      settings.mHalfConeAngle = gdjs.toRad(halfConeAngle);
+
+      const constraint = this._sharedData.bodyInterface.CreateConstraint(
+        settings,
+        body.GetID(),
+        otherBody.GetID()
+      );
+      Jolt.destroy(settings);
+
+      this._sharedData.bodyInterface.ActivateConstraint(
+        Jolt.castObject(constraint, Jolt.TwoBodyConstraint)
+      );
+      const jointId = this._sharedData.addJoint(constraint);
+      variable.setNumber(jointId);
+    }
+
+    /**
+     * Remove a joint by its ID.
+     */
+    removeJoint(jointId: integer | string): void {
+      this._sharedData.removeJoint(jointId);
+    }
+
+    /**
+     * Check if this object is the first body in a joint.
+     */
+    isJointFirstObject(jointId: integer | string): boolean {
+      if (this._body === null) return false;
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return false;
+      const twoBodyConstraint = Jolt.castObject(
+        constraint,
+        Jolt.TwoBodyConstraint
+      );
+      return twoBodyConstraint.GetBody1() === this._body;
+    }
+
+    /**
+     * Check if this object is the second body in a joint.
+     */
+    isJointSecondObject(jointId: integer | string): boolean {
+      if (this._body === null) return false;
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return false;
+      const twoBodyConstraint = Jolt.castObject(
+        constraint,
+        Jolt.TwoBodyConstraint
+      );
+      return twoBodyConstraint.GetBody2() === this._body;
+    }
+
+    /**
+     * Set the limits on a hinge joint (in degrees).
+     */
+    setHingeJointLimits(
+      jointId: integer | string,
+      limitsMin: float,
+      limitsMax: float
+    ): void {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return;
+      const hingeConstraint = Jolt.castObject(
+        constraint,
+        Jolt.HingeConstraint
+      );
+      hingeConstraint.SetLimits(gdjs.toRad(limitsMin), gdjs.toRad(limitsMax));
+    }
+
+    /**
+     * Set the motor on a hinge joint.
+     * @param motorState "Off", "Velocity", or "Position"
+     * @param target Target velocity (deg/s) or angle (degrees)
+     */
+    setHingeJointMotor(
+      jointId: integer | string,
+      motorState: string,
+      target: float
+    ): void {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return;
+      const hingeConstraint = Jolt.castObject(
+        constraint,
+        Jolt.HingeConstraint
+      );
+      if (motorState === 'Velocity') {
+        hingeConstraint.SetMotorState(Jolt.EMotorState_Velocity);
+        hingeConstraint.SetTargetAngularVelocity(gdjs.toRad(target));
+      } else if (motorState === 'Position') {
+        hingeConstraint.SetMotorState(Jolt.EMotorState_Position);
+        hingeConstraint.SetTargetAngle(gdjs.toRad(target));
+      } else {
+        hingeConstraint.SetMotorState(Jolt.EMotorState_Off);
+      }
+    }
+
+    /**
+     * Get the current angle of a hinge joint (in degrees).
+     */
+    getHingeJointAngle(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const hingeConstraint = Jolt.castObject(
+        constraint,
+        Jolt.HingeConstraint
+      );
+      return gdjs.toDegrees(hingeConstraint.GetCurrentAngle());
+    }
+
+    /**
+     * Set the limits on a slider joint (in pixels).
+     */
+    setSliderJointLimits(
+      jointId: integer | string,
+      limitsMin: float,
+      limitsMax: float
+    ): void {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return;
+      const sliderConstraint = Jolt.castObject(
+        constraint,
+        Jolt.SliderConstraint
+      );
+      sliderConstraint.SetLimits(
+        limitsMin * this._sharedData.worldInvScale,
+        limitsMax * this._sharedData.worldInvScale
+      );
+    }
+
+    /**
+     * Set the motor on a slider joint.
+     * @param motorState "Off", "Velocity", or "Position"
+     * @param target Target velocity (pixels/s) or position (pixels)
+     */
+    setSliderJointMotor(
+      jointId: integer | string,
+      motorState: string,
+      target: float
+    ): void {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return;
+      const sliderConstraint = Jolt.castObject(
+        constraint,
+        Jolt.SliderConstraint
+      );
+      if (motorState === 'Velocity') {
+        sliderConstraint.SetMotorState(Jolt.EMotorState_Velocity);
+        sliderConstraint.SetTargetVelocity(
+          target * this._sharedData.worldInvScale
+        );
+      } else if (motorState === 'Position') {
+        sliderConstraint.SetMotorState(Jolt.EMotorState_Position);
+        sliderConstraint.SetTargetPosition(
+          target * this._sharedData.worldInvScale
+        );
+      } else {
+        sliderConstraint.SetMotorState(Jolt.EMotorState_Off);
+      }
+    }
+
+    /**
+     * Get the current position of a slider joint (in pixels).
+     */
+    getSliderJointPosition(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const sliderConstraint = Jolt.castObject(
+        constraint,
+        Jolt.SliderConstraint
+      );
+      return sliderConstraint.GetCurrentPosition() * this._sharedData.worldScale;
+    }
+
+    /**
+     * Set the distance on a distance joint (in pixels).
+     */
+    setDistanceJointDistance(
+      jointId: integer | string,
+      minDistance: float,
+      maxDistance: float
+    ): void {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return;
+      const distanceConstraint = Jolt.castObject(
+        constraint,
+        Jolt.DistanceConstraint
+      );
+      distanceConstraint.SetDistance(
+        minDistance * this._sharedData.worldInvScale,
+        maxDistance * this._sharedData.worldInvScale
+      );
     }
   }
 
