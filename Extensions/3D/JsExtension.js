@@ -2705,6 +2705,88 @@ module.exports = {
     }
     {
       const effect = extension
+        .addEffect('VolumetricFog')
+        .setFullName(_('Volumetric fog'))
+        .setDescription(
+          _(
+            'Simulate volumetric light scattering by ray-marching fog in screen space around scene lights.'
+          )
+        )
+        .markAsNotWorkingForObjects()
+        .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/VolumetricFogEffect.js');
+      const properties = effect.getProperties();
+      properties
+        .getOrCreate('enabled')
+        .setValue('true')
+        .setLabel(_('Enabled'))
+        .setType('boolean');
+      properties
+        .getOrCreate('fogColor')
+        .setValue('200;220;255')
+        .setLabel(_('Fog color'))
+        .setType('color');
+      properties
+        .getOrCreate('density')
+        .setValue('0.012')
+        .setLabel(_('Density'))
+        .setType('number')
+        .setDescription(_('Base fog density in the volume.'));
+      properties
+        .getOrCreate('lightScatter')
+        .setValue('1')
+        .setLabel(_('Light scatter'))
+        .setType('number')
+        .setDescription(_('How much fog glows near PointLight and SpotLight.'));
+      properties
+        .getOrCreate('maxDistance')
+        .setValue('1200')
+        .setLabel(_('Max distance'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setDescription(_('Maximum distance for volumetric ray marching.'));
+    }
+    {
+      const effect = extension
+        .addEffect('DepthOfField')
+        .setFullName(_('Depth of field'))
+        .setDescription(
+          _(
+            'Blur pixels based on distance from the focus plane using depth-aware gaussian blur.'
+          )
+        )
+        .markAsNotWorkingForObjects()
+        .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/DepthOfFieldEffect.js');
+      const properties = effect.getProperties();
+      properties
+        .getOrCreate('enabled')
+        .setValue('true')
+        .setLabel(_('Enabled'))
+        .setType('boolean');
+      properties
+        .getOrCreate('focusDistance')
+        .setValue('400')
+        .setLabel(_('Focus distance'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setDescription(_('Distance from the camera that remains sharp.'));
+      properties
+        .getOrCreate('focusRange')
+        .setValue('250')
+        .setLabel(_('Focus range'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setDescription(_('How gradually blur increases around focus distance.'));
+      properties
+        .getOrCreate('maxBlur')
+        .setValue('6')
+        .setLabel(_('Max blur'))
+        .setType('number')
+        .setDescription(_('Maximum blur radius strength.'));
+    }
+    {
+      const effect = extension
         .addEffect('BrightnessAndContrast')
         .setFullName(_('Brightness and contrast.'))
         .setDescription(_('Adjust brightness and contrast.'))
