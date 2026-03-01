@@ -2666,6 +2666,45 @@ module.exports = {
     }
     {
       const effect = extension
+        .addEffect('ScreenSpaceReflections')
+        .setFullName(_('Screen-space reflections'))
+        .setDescription(
+          _(
+            'Render approximate screen-space reflections for visible surfaces in 3D.'
+          )
+        )
+        .markAsNotWorkingForObjects()
+        .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/ScreenSpaceReflectionsEffect.js');
+      const properties = effect.getProperties();
+      properties
+        .getOrCreate('enabled')
+        .setValue('true')
+        .setLabel(_('Enabled'))
+        .setType('boolean');
+      properties
+        .getOrCreate('intensity')
+        .setValue('0.6')
+        .setLabel(_('Intensity'))
+        .setType('number')
+        .setDescription(_('Overall strength of reflected light.'));
+      properties
+        .getOrCreate('maxDistance')
+        .setValue('400')
+        .setLabel(_('Max distance'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setDescription(_('Maximum screen-space ray marching distance.'));
+      properties
+        .getOrCreate('thickness')
+        .setValue('2')
+        .setLabel(_('Thickness'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setDescription(_('Depth tolerance to detect reflection hits.'));
+    }
+    {
+      const effect = extension
         .addEffect('BrightnessAndContrast')
         .setFullName(_('Brightness and contrast.'))
         .setDescription(_('Adjust brightness and contrast.'))
