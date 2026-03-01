@@ -12,10 +12,10 @@ namespace gdjs {
       tSceneColor: { value: null },
       tDepth: { value: null },
       resolution: { value: new THREE.Vector2(1, 1) },
-      intensity: { value: 0.6 },
-      maxDistance: { value: 400.0 },
-      thickness: { value: 2.0 },
-      maxSteps: { value: 40.0 },
+      intensity: { value: 0.85 },
+      maxDistance: { value: 650.0 },
+      thickness: { value: 10.0 },
+      maxSteps: { value: 28.0 },
       cameraProjectionMatrix: { value: new THREE.Matrix4() },
       cameraProjectionMatrixInverse: { value: new THREE.Matrix4() },
     },
@@ -72,36 +72,38 @@ namespace gdjs {
         return clip.xy / max(clip.w, 0.00001) * 0.5 + 0.5;
       }
 
-      float estimateRoughness(vec2 uv, vec3 centerColor, vec3 normal) {
-        vec2 texel = 1.0 / resolution;
-        vec3 rightColor = texture2D(tSceneColor, uv + vec2(texel.x, 0.0)).rgb;
-        vec3 upColor = texture2D(tSceneColor, uv + vec2(0.0, texel.y)).rgb;
-        float l0 = dot(centerColor, vec3(0.2126, 0.7152, 0.0722));
-        float l1 = dot(rightColor, vec3(0.2126, 0.7152, 0.0722));
-        float l2 = dot(upColor, vec3(0.2126, 0.7152, 0.0722));
-        float colorVariance = clamp((abs(l0 - l1) + abs(l0 - l2)) * 2.5, 0.0, 1.0);
-        float normalFlatness = 1.0 - clamp(abs(normal.z), 0.0, 1.0);
-        return clamp(colorVariance * 0.75 + normalFlatness * 0.25, 0.0, 1.0);
+      float estimateRoughness(vec3 normal, vec3 viewPos) {
+        float facing = clamp(dot(normal, -normalize(viewPos)), 0.0, 1.0);
+        return clamp(1.0 - facing * facing, 0.08, 0.8);
       }
 
-      vec4 refineHit(vec3 originVS, vec3 reflectedDirVS, vec3 lowPos, vec3 highPos, float roughness) {
+      vec3 sampleReflectionColor(vec2 uv) {
+        vec3 currentFrame = texture2D(tDiffuse, uv).rgb;
+        vec3 capturedFrame = texture2D(tSceneColor, uv).rgb;
+        return mix(currentFrame, capturedFrame, 0.65);
+      }
+
+      vec4 refineHit(vec3 originVS, vec3 lowPos, vec3 highPos, float roughness) {
         vec3 a = lowPos;
         vec3 b = highPos;
         vec3 mid = highPos;
-        vec2 midUv = projectToUv(mid);
 
         for (int i = 0; i < SSR_REFINEMENT_STEPS; ++i) {
           mid = (a + b) * 0.5;
-          midUv = projectToUv(mid);
+          vec2 midUv = projectToUv(mid);
           if (midUv.x <= 0.0 || midUv.x >= 1.0 || midUv.y <= 0.0 || midUv.y >= 1.0) {
             b = mid;
             continue;
           }
           float sampledDepth = texture2D(tDepth, midUv).x;
+          if (sampledDepth >= 1.0) {
+            a = mid;
+            continue;
+          }
           vec3 depthViewPos = viewPositionFromDepth(midUv, sampledDepth);
-          float depthDelta = depthViewPos.z - mid.z;
-          float hitThickness = thickness + roughness * thickness * 1.5;
-          if (depthDelta > -hitThickness) {
+          float signedDepth = depthViewPos.z - mid.z;
+          float hitThickness = max(thickness, maxDistance / max(maxSteps, 1.0));
+          if (signedDepth > -hitThickness * (1.0 + roughness)) {
             b = mid;
           } else {
             a = mid;
@@ -112,7 +114,7 @@ namespace gdjs {
         if (finalUv.x <= 0.0 || finalUv.x >= 1.0 || finalUv.y <= 0.0 || finalUv.y >= 1.0) {
           return vec4(0.0);
         }
-        vec3 hitColor = texture2D(tSceneColor, finalUv).rgb;
+        vec3 hitColor = sampleReflectionColor(finalUv);
         float hitDistance = length(mid - originVS);
         return vec4(hitColor, hitDistance);
       }
@@ -128,9 +130,9 @@ namespace gdjs {
           if (float(i) >= clampedSteps) {
             break;
           }
+
           previousRayPos = rayPos;
           rayPos += reflectedDirVS * stepSize;
-
           vec2 uv = projectToUv(rayPos);
           if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0) {
             break;
@@ -142,17 +144,11 @@ namespace gdjs {
           }
 
           vec3 depthViewPos = viewPositionFromDepth(uv, sampledDepth);
-          float depthDelta = abs(depthViewPos.z - rayPos.z);
-          float hitThickness = thickness + roughness * thickness * 2.0;
+          float signedDepth = depthViewPos.z - rayPos.z;
+          float hitThickness = max(thickness, stepSize * 1.35) * (1.0 + roughness * 0.5);
 
-          if (depthDelta <= hitThickness && depthViewPos.z <= rayPos.z + hitThickness) {
-            hit = refineHit(
-              originVS,
-              reflectedDirVS,
-              previousRayPos,
-              rayPos,
-              roughness
-            );
+          if (signedDepth >= -hitThickness && signedDepth <= hitThickness * 1.8) {
+            hit = refineHit(originVS, previousRayPos, rayPos, roughness);
             break;
           }
         }
@@ -175,36 +171,34 @@ namespace gdjs {
 
         vec3 viewPos = viewPositionFromDepth(vUv, depth);
         vec3 normal = reconstructNormal(vUv, depth);
-        vec3 viewDir = normalize(viewPos);
-        vec3 reflectedDir = normalize(reflect(viewDir, normal));
+        vec3 reflectedDir = normalize(reflect(normalize(viewPos), normal));
 
-        if (reflectedDir.z >= 0.0) {
-          gl_FragColor = baseColor;
-          return;
-        }
-
-        vec3 sourceColor = texture2D(tSceneColor, vUv).rgb;
-        float roughness = estimateRoughness(vUv, sourceColor, normal);
+        float roughness = estimateRoughness(normal, viewPos);
         vec4 hit = traceReflection(viewPos, reflectedDir, roughness);
         vec3 reflectionColor = hit.rgb;
         float rayDistance = hit.a;
+
         if (rayDistance <= 0.0) {
-          gl_FragColor = baseColor;
-          return;
+          vec2 fallbackUv = clamp(
+            vUv + reflectedDir.xy * (0.045 + 0.035 * (1.0 - roughness)),
+            vec2(0.0),
+            vec2(1.0)
+          );
+          reflectionColor = sampleReflectionColor(fallbackUv);
+          rayDistance = maxDistance * 0.45;
         }
 
-        float fresnel = pow(1.0 - max(dot(normal, -normalize(viewPos)), 0.0), 5.0);
+        float fresnel = pow(1.0 - max(dot(normal, -normalize(viewPos)), 0.0), 4.0);
         float distanceFade = clamp(1.0 - rayDistance / maxDistance, 0.0, 1.0);
         float edgeFade =
-          smoothstep(0.02, 0.15, vUv.x) *
-          smoothstep(0.02, 0.15, vUv.y) *
-          smoothstep(0.02, 0.15, 1.0 - vUv.x) *
-          smoothstep(0.02, 0.15, 1.0 - vUv.y);
-        float materialReflectivity = max(0.12, 1.0 - roughness);
+          smoothstep(0.01, 0.10, vUv.x) *
+          smoothstep(0.01, 0.10, vUv.y) *
+          smoothstep(0.01, 0.10, 1.0 - vUv.x) *
+          smoothstep(0.01, 0.10, 1.0 - vUv.y);
         float reflectionStrength =
           intensity *
-          materialReflectivity *
-          (0.15 + 0.85 * fresnel) *
+          (0.25 + 0.75 * (1.0 - roughness)) *
+          (0.25 + 0.75 * fresnel) *
           distanceFade *
           edgeFade;
 
@@ -249,9 +243,9 @@ namespace gdjs {
             );
             this._isEnabled = false;
             this._effectEnabled = true;
-            this._intensity = 0.6;
-            this._maxDistance = 400;
-            this._thickness = 2;
+            this._intensity = 0.85;
+            this._maxDistance = 650;
+            this._thickness = 10;
             this._sceneRenderTarget = new THREE.WebGLRenderTarget(1, 1, {
               minFilter: THREE.LinearFilter,
               magFilter: THREE.LinearFilter,
@@ -272,8 +266,8 @@ namespace gdjs {
             this._previousViewport = new THREE.Vector4();
             this._previousScissor = new THREE.Vector4();
             this._renderSize = new THREE.Vector2();
-            this._captureScale = 1.0;
-            this._raySteps = 40;
+            this._captureScale = 0.8;
+            this._raySteps = 28;
             this._frameTimeSmoothing = 16.6;
             this._framesSinceCapture = 9999;
             this._captureIntervalFrames = 1;
@@ -346,18 +340,23 @@ namespace gdjs {
             this._frameTimeSmoothing =
               this._frameTimeSmoothing * 0.9 + elapsedTimeMs * 0.1;
 
-            if (this._frameTimeSmoothing > 22) {
-              this._captureScale = Math.max(0.6, this._captureScale - 0.04);
-              this._raySteps = Math.max(20, this._raySteps - 2);
-            } else if (this._frameTimeSmoothing < 15) {
-              this._captureScale = Math.min(1.0, this._captureScale + 0.02);
-              this._raySteps = Math.min(48, this._raySteps + 1);
+            if (this._frameTimeSmoothing > 28) {
+              this._captureScale = Math.max(0.5, this._captureScale - 0.05);
+              this._raySteps = Math.max(12, this._raySteps - 2);
+            } else if (this._frameTimeSmoothing > 22) {
+              this._captureScale = Math.max(0.6, this._captureScale - 0.03);
+              this._raySteps = Math.max(16, this._raySteps - 1);
+            } else if (this._frameTimeSmoothing < 14) {
+              this._captureScale = Math.min(0.95, this._captureScale + 0.02);
+              this._raySteps = Math.min(36, this._raySteps + 1);
             }
 
             this._captureIntervalFrames =
-              this._frameTimeSmoothing > 30
-                ? 3
-                : this._frameTimeSmoothing > 22
+              this._frameTimeSmoothing > 40
+                ? 4
+                : this._frameTimeSmoothing > 28
+                  ? 3
+                  : this._frameTimeSmoothing > 22
                   ? 2
                   : 1;
           }
@@ -377,6 +376,19 @@ namespace gdjs {
             threeRenderer.xr.enabled = false;
             threeRenderer.autoClear = true;
             threeRenderer.setRenderTarget(this._sceneRenderTarget);
+            threeRenderer.setViewport(
+              0,
+              0,
+              this._sceneRenderTarget.width,
+              this._sceneRenderTarget.height
+            );
+            threeRenderer.setScissor(
+              0,
+              0,
+              this._sceneRenderTarget.width,
+              this._sceneRenderTarget.height
+            );
+            threeRenderer.setScissorTest(false);
             threeRenderer.clear(true, true, true);
             threeRenderer.render(scene, camera);
 
@@ -413,6 +425,10 @@ namespace gdjs {
             this._updateRenderTargetSize(target, threeRenderer);
 
             threeCamera.updateMatrixWorld();
+            threeCamera.updateProjectionMatrix();
+            threeCamera.projectionMatrixInverse
+              .copy(threeCamera.projectionMatrix)
+              .invert();
             this.shaderPass.uniforms.cameraProjectionMatrix.value.copy(
               threeCamera.projectionMatrix
             );

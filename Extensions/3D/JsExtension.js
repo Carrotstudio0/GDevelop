@@ -2684,24 +2684,24 @@ module.exports = {
         .setType('boolean');
       properties
         .getOrCreate('intensity')
-        .setValue('0.6')
+        .setValue('0.85')
         .setLabel(_('Intensity'))
         .setType('number')
         .setDescription(_('Overall strength of reflected light.'));
       properties
         .getOrCreate('maxDistance')
-        .setValue('400')
+        .setValue('650')
         .setLabel(_('Max distance'))
         .setType('number')
         .setMeasurementUnit(gd.MeasurementUnit.getPixel())
-        .setDescription(_('Maximum screen-space ray marching distance.'));
+        .setDescription(_('Maximum reflection tracing distance (balanced for performance).'));
       properties
         .getOrCreate('thickness')
-        .setValue('2')
+        .setValue('10')
         .setLabel(_('Thickness'))
         .setType('number')
         .setMeasurementUnit(gd.MeasurementUnit.getPixel())
-        .setDescription(_('Depth tolerance to detect reflection hits.'));
+        .setDescription(_('Depth tolerance to detect reflection hits reliably.'));
     }
     {
       const effect = extension
