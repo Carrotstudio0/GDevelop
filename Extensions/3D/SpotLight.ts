@@ -217,7 +217,7 @@ namespace gdjs {
               return;
             }
 
-            const runtimeScene = target.getRuntimeScene();
+            const runtimeScene = target.getRuntimeScene() as gdjs.RuntimeScene;
             if (!runtimeScene) {
               this._hideBounceLight();
               return;

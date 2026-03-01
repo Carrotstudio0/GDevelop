@@ -15,6 +15,7 @@ namespace gdjs {
       intensity: { value: 0.6 },
       maxDistance: { value: 400.0 },
       thickness: { value: 2.0 },
+      maxSteps: { value: 40.0 },
       cameraProjectionMatrix: { value: new THREE.Matrix4() },
       cameraProjectionMatrixInverse: { value: new THREE.Matrix4() },
     },
@@ -36,6 +37,7 @@ namespace gdjs {
       uniform float intensity;
       uniform float maxDistance;
       uniform float thickness;
+      uniform float maxSteps;
       uniform mat4 cameraProjectionMatrix;
       uniform mat4 cameraProjectionMatrixInverse;
       varying vec2 vUv;
@@ -116,12 +118,16 @@ namespace gdjs {
       }
 
       vec4 traceReflection(vec3 originVS, vec3 reflectedDirVS, float roughness) {
-        float stepSize = maxDistance / float(SSR_STEPS);
+        float clampedSteps = clamp(maxSteps, 8.0, float(SSR_STEPS));
+        float stepSize = maxDistance / clampedSteps;
         vec3 rayPos = originVS;
         vec3 previousRayPos = rayPos;
         vec4 hit = vec4(0.0);
 
         for (int i = 0; i < SSR_STEPS; ++i) {
+          if (float(i) >= clampedSteps) {
+            break;
+          }
           previousRayPos = rayPos;
           rayPos += reflectedDirVS * stepSize;
 
@@ -194,9 +200,10 @@ namespace gdjs {
           smoothstep(0.02, 0.15, vUv.y) *
           smoothstep(0.02, 0.15, 1.0 - vUv.x) *
           smoothstep(0.02, 0.15, 1.0 - vUv.y);
+        float materialReflectivity = max(0.12, 1.0 - roughness);
         float reflectionStrength =
           intensity *
-          (1.0 - roughness) *
+          materialReflectivity *
           (0.15 + 0.85 * fresnel) *
           distanceFade *
           edgeFade;
@@ -230,6 +237,11 @@ namespace gdjs {
           _previousViewport: THREE.Vector4;
           _previousScissor: THREE.Vector4;
           _renderSize: THREE.Vector2;
+          _captureScale: number;
+          _raySteps: number;
+          _frameTimeSmoothing: number;
+          _framesSinceCapture: number;
+          _captureIntervalFrames: number;
 
           constructor() {
             this.shaderPass = new THREE_ADDONS.ShaderPass(
@@ -260,6 +272,11 @@ namespace gdjs {
             this._previousViewport = new THREE.Vector4();
             this._previousScissor = new THREE.Vector4();
             this._renderSize = new THREE.Vector2();
+            this._captureScale = 1.0;
+            this._raySteps = 40;
+            this._frameTimeSmoothing = 16.6;
+            this._framesSinceCapture = 9999;
+            this._captureIntervalFrames = 1;
           }
 
           isEnabled(target: EffectsTarget): boolean {
@@ -299,11 +316,11 @@ namespace gdjs {
             threeRenderer.getDrawingBufferSize(this._renderSize);
             const width = Math.max(
               1,
-              Math.round(this._renderSize.x || target.getWidth())
+              Math.round((this._renderSize.x || target.getWidth()) * this._captureScale)
             );
             const height = Math.max(
               1,
-              Math.round(this._renderSize.y || target.getHeight())
+              Math.round((this._renderSize.y || target.getHeight()) * this._captureScale)
             );
             if (
               this._sceneRenderTarget.width !== width ||
@@ -322,6 +339,27 @@ namespace gdjs {
               this._sceneRenderTarget.depthTexture;
             this._sceneRenderTarget.texture.colorSpace =
               threeRenderer.outputColorSpace;
+          }
+
+          private _adaptQuality(target: gdjs.EffectsTarget): void {
+            const elapsedTimeMs = Math.max(0, target.getElapsedTime());
+            this._frameTimeSmoothing =
+              this._frameTimeSmoothing * 0.9 + elapsedTimeMs * 0.1;
+
+            if (this._frameTimeSmoothing > 22) {
+              this._captureScale = Math.max(0.6, this._captureScale - 0.04);
+              this._raySteps = Math.max(20, this._raySteps - 2);
+            } else if (this._frameTimeSmoothing < 15) {
+              this._captureScale = Math.min(1.0, this._captureScale + 0.02);
+              this._raySteps = Math.min(48, this._raySteps + 1);
+            }
+
+            this._captureIntervalFrames =
+              this._frameTimeSmoothing > 30
+                ? 3
+                : this._frameTimeSmoothing > 22
+                  ? 2
+                  : 1;
           }
 
           private _captureScene(
@@ -371,6 +409,7 @@ namespace gdjs {
               return;
             }
 
+            this._adaptQuality(target);
             this._updateRenderTargetSize(target, threeRenderer);
 
             threeCamera.updateMatrixWorld();
@@ -383,8 +422,13 @@ namespace gdjs {
             this.shaderPass.uniforms.intensity.value = this._intensity;
             this.shaderPass.uniforms.maxDistance.value = this._maxDistance;
             this.shaderPass.uniforms.thickness.value = this._thickness;
+            this.shaderPass.uniforms.maxSteps.value = this._raySteps;
 
-            this._captureScene(threeRenderer, threeScene, threeCamera);
+            this._framesSinceCapture += 1;
+            if (this._framesSinceCapture >= this._captureIntervalFrames) {
+              this._captureScene(threeRenderer, threeScene, threeCamera);
+              this._framesSinceCapture = 0;
+            }
           }
           updateDoubleParameter(parameterName: string, value: number): void {
             if (parameterName === 'intensity') {
