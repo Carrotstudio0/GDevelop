@@ -16,6 +16,15 @@ namespace gdjs {
     snb: number;
     sn: number;
     sf: number;
+    ao?: string;
+    ox?: number;
+    oy?: number;
+    oz?: number;
+    tao?: string;
+    tox?: number;
+    toy?: number;
+    toz?: number;
+    ro?: boolean;
   }
   gdjs.PixiFiltersTools.registerFilterCreator(
     'Scene3D::SpotLight',
@@ -44,6 +53,15 @@ namespace gdjs {
           private _shadowNormalBias: float = 0.02;
           private _shadowNear: float = 1;
           private _shadowFar: float = 10000;
+          private _attachedObjectName: string = '';
+          private _attachedOffsetX: float = 0;
+          private _attachedOffsetY: float = 0;
+          private _attachedOffsetZ: float = 0;
+          private _targetAttachedObjectName: string = '';
+          private _targetAttachedOffsetX: float = 0;
+          private _targetAttachedOffsetY: float = 0;
+          private _targetAttachedOffsetZ: float = 0;
+          private _rotateOffsetsWithObjectAngle: boolean = false;
 
           private _isEnabled: boolean = false;
           private _light: THREE.SpotLight;
@@ -105,36 +123,135 @@ namespace gdjs {
             this._light.shadow.camera.updateProjectionMatrix();
           }
 
-          private _updatePosition(): void {
+          private _setLightPosition(x: float, y: float, z: float): void {
             if (this._top === 'Y-') {
               this._light.position.set(
-                this._positionX,
-                -this._positionZ,
-                this._positionY
+                x,
+                -z,
+                y
               );
             } else {
               this._light.position.set(
-                this._positionX,
-                this._positionY,
-                this._positionZ
+                x,
+                y,
+                z
+              );
+            }
+          }
+
+          private _updatePosition(): void {
+            this._setLightPosition(
+              this._positionX,
+              this._positionY,
+              this._positionZ
+            );
+          }
+
+          private _setTargetPosition(x: float, y: float, z: float): void {
+            if (this._top === 'Y-') {
+              this._light.target.position.set(
+                x,
+                -z,
+                y
+              );
+            } else {
+              this._light.target.position.set(
+                x,
+                y,
+                z
               );
             }
           }
 
           private _updateTarget(): void {
-            if (this._top === 'Y-') {
-              this._light.target.position.set(
-                this._targetX,
-                -this._targetZ,
-                this._targetY
-              );
-            } else {
-              this._light.target.position.set(
-                this._targetX,
-                this._targetY,
-                this._targetZ
-              );
+            this._setTargetPosition(
+              this._targetX,
+              this._targetY,
+              this._targetZ
+            );
+          }
+
+          private _getFirstObjectByName(
+            target: EffectsTarget,
+            objectName: string
+          ): gdjs.RuntimeObject | null {
+            if (!objectName) {
+              return null;
             }
+            const objects = target.getRuntimeScene().getObjects(objectName);
+            if (!objects || objects.length === 0) {
+              return null;
+            }
+            return objects[0];
+          }
+
+          private _getObjectCenterZ(object: gdjs.RuntimeObject): float {
+            const object3D = object as gdjs.RuntimeObject & {
+              getCenterZInScene?: () => float;
+            };
+            return typeof object3D.getCenterZInScene === 'function'
+              ? object3D.getCenterZInScene()
+              : 0;
+          }
+
+          private _getRotatedOffsets(
+            object: gdjs.RuntimeObject,
+            offsetX: float,
+            offsetY: float
+          ): [float, float] {
+            if (!this._rotateOffsetsWithObjectAngle) {
+              return [offsetX, offsetY];
+            }
+            const angleRad = gdjs.toRad(object.getAngle());
+            const cos = Math.cos(angleRad);
+            const sin = Math.sin(angleRad);
+            return [
+              offsetX * cos - offsetY * sin,
+              offsetX * sin + offsetY * cos,
+            ];
+          }
+
+          private _applyAttachedPosition(target: EffectsTarget): boolean {
+            const attachedObject = this._getFirstObjectByName(
+              target,
+              this._attachedObjectName
+            );
+            if (!attachedObject) {
+              return false;
+            }
+            const [offsetX, offsetY] = this._getRotatedOffsets(
+              attachedObject,
+              this._attachedOffsetX,
+              this._attachedOffsetY
+            );
+            this._setLightPosition(
+              attachedObject.getCenterXInScene() + offsetX,
+              attachedObject.getCenterYInScene() + offsetY,
+              this._getObjectCenterZ(attachedObject) + this._attachedOffsetZ
+            );
+            return true;
+          }
+
+          private _applyAttachedTarget(target: EffectsTarget): boolean {
+            const attachedObject = this._getFirstObjectByName(
+              target,
+              this._targetAttachedObjectName
+            );
+            if (!attachedObject) {
+              return false;
+            }
+            const [offsetX, offsetY] = this._getRotatedOffsets(
+              attachedObject,
+              this._targetAttachedOffsetX,
+              this._targetAttachedOffsetY
+            );
+            this._setTargetPosition(
+              attachedObject.getCenterXInScene() + offsetX,
+              attachedObject.getCenterYInScene() + offsetY,
+              this._getObjectCenterZ(attachedObject) +
+                this._targetAttachedOffsetZ
+            );
+            return true;
           }
 
           isEnabled(target: EffectsTarget): boolean {
@@ -177,6 +294,18 @@ namespace gdjs {
             return true;
           }
           updatePreRender(target: gdjs.EffectsTarget): any {
+            if (
+              !this._applyAttachedPosition(target) &&
+              this._attachedObjectName !== ''
+            ) {
+              this._updatePosition();
+            }
+            if (
+              !this._applyAttachedTarget(target) &&
+              this._targetAttachedObjectName !== ''
+            ) {
+              this._updateTarget();
+            }
             this._updateShadowCamera();
             this._updateShadowMapSize();
 
@@ -195,6 +324,12 @@ namespace gdjs {
             } else if (parameterName === 'positionZ') {
               this._positionZ = value;
               this._updatePosition();
+            } else if (parameterName === 'attachedOffsetX') {
+              this._attachedOffsetX = value;
+            } else if (parameterName === 'attachedOffsetY') {
+              this._attachedOffsetY = value;
+            } else if (parameterName === 'attachedOffsetZ') {
+              this._attachedOffsetZ = value;
             } else if (parameterName === 'targetX') {
               this._targetX = value;
               this._updateTarget();
@@ -204,6 +339,12 @@ namespace gdjs {
             } else if (parameterName === 'targetZ') {
               this._targetZ = value;
               this._updateTarget();
+            } else if (parameterName === 'targetAttachedOffsetX') {
+              this._targetAttachedOffsetX = value;
+            } else if (parameterName === 'targetAttachedOffsetY') {
+              this._targetAttachedOffsetY = value;
+            } else if (parameterName === 'targetAttachedOffsetZ') {
+              this._targetAttachedOffsetZ = value;
             } else if (parameterName === 'distance') {
               this._distance = value;
               this._light.distance = value;
@@ -239,12 +380,24 @@ namespace gdjs {
               return this._positionY;
             } else if (parameterName === 'positionZ') {
               return this._positionZ;
+            } else if (parameterName === 'attachedOffsetX') {
+              return this._attachedOffsetX;
+            } else if (parameterName === 'attachedOffsetY') {
+              return this._attachedOffsetY;
+            } else if (parameterName === 'attachedOffsetZ') {
+              return this._attachedOffsetZ;
             } else if (parameterName === 'targetX') {
               return this._targetX;
             } else if (parameterName === 'targetY') {
               return this._targetY;
             } else if (parameterName === 'targetZ') {
               return this._targetZ;
+            } else if (parameterName === 'targetAttachedOffsetX') {
+              return this._targetAttachedOffsetX;
+            } else if (parameterName === 'targetAttachedOffsetY') {
+              return this._targetAttachedOffsetY;
+            } else if (parameterName === 'targetAttachedOffsetZ') {
+              return this._targetAttachedOffsetZ;
             } else if (parameterName === 'distance') {
               return this._distance;
             } else if (parameterName === 'angle') {
@@ -275,6 +428,12 @@ namespace gdjs {
               this._updatePosition();
               this._updateTarget();
             }
+            if (parameterName === 'attachedObject') {
+              this._attachedObjectName = value;
+            }
+            if (parameterName === 'targetAttachedObject') {
+              this._targetAttachedObjectName = value;
+            }
             if (parameterName === 'shadowQuality') {
               if (value === 'low' && this._shadowMapSize !== 512) {
                 this._shadowMapSize = 512;
@@ -304,6 +463,8 @@ namespace gdjs {
           updateBooleanParameter(parameterName: string, value: boolean): void {
             if (parameterName === 'isCastingShadow') {
               this._light.castShadow = value;
+            } else if (parameterName === 'rotateOffsetsWithObjectAngle') {
+              this._rotateOffsetsWithObjectAngle = value;
             }
           }
           getNetworkSyncData(): SpotLightFilterNetworkSyncData {
@@ -324,6 +485,15 @@ namespace gdjs {
               snb: this._shadowNormalBias,
               sn: this._shadowNear,
               sf: this._shadowFar,
+              ao: this._attachedObjectName,
+              ox: this._attachedOffsetX,
+              oy: this._attachedOffsetY,
+              oz: this._attachedOffsetZ,
+              tao: this._targetAttachedObjectName,
+              tox: this._targetAttachedOffsetX,
+              toy: this._targetAttachedOffsetY,
+              toz: this._targetAttachedOffsetZ,
+              ro: this._rotateOffsetsWithObjectAngle,
             };
           }
           updateFromNetworkSyncData(
@@ -345,6 +515,15 @@ namespace gdjs {
             this._shadowNormalBias = syncData.snb;
             this._shadowNear = syncData.sn;
             this._shadowFar = syncData.sf;
+            this._attachedObjectName = syncData.ao || '';
+            this._attachedOffsetX = syncData.ox ?? 0;
+            this._attachedOffsetY = syncData.oy ?? 0;
+            this._attachedOffsetZ = syncData.oz ?? 0;
+            this._targetAttachedObjectName = syncData.tao || '';
+            this._targetAttachedOffsetX = syncData.tox ?? 0;
+            this._targetAttachedOffsetY = syncData.toy ?? 0;
+            this._targetAttachedOffsetZ = syncData.toz ?? 0;
+            this._rotateOffsetsWithObjectAngle = syncData.ro ?? false;
             this._light.distance = syncData.d;
             this._light.angle = gdjs.toRad(syncData.a);
             this._light.penumbra = syncData.p;

@@ -2156,6 +2156,49 @@ module.exports = {
         .setMeasurementUnit(gd.MeasurementUnit.getPixel())
         .setGroup(_('Position'));
       properties
+        .getOrCreate('attachedObject')
+        .setValue('')
+        .setLabel(_('Attached object name'))
+        .setDescription(
+          _(
+            'Object name to follow. Leave empty to use the manual position values.'
+          )
+        )
+        .setType('string')
+        .setGroup(_('Attachment'));
+      properties
+        .getOrCreate('attachedOffsetX')
+        .setValue('0')
+        .setLabel(_('Attached offset X'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Attachment'));
+      properties
+        .getOrCreate('attachedOffsetY')
+        .setValue('0')
+        .setLabel(_('Attached offset Y'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Attachment'));
+      properties
+        .getOrCreate('attachedOffsetZ')
+        .setValue('0')
+        .setLabel(_('Attached offset Z'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Attachment'));
+      properties
+        .getOrCreate('rotateOffsetsWithObjectAngle')
+        .setValue('false')
+        .setLabel(_('Rotate offsets with object angle'))
+        .setDescription(
+          _(
+            'Rotate X/Y offsets using the attached object angle, useful for placing the light in a hand.'
+          )
+        )
+        .setType('boolean')
+        .setGroup(_('Attachment'));
+      properties
         .getOrCreate('distance')
         .setValue('0')
         .setLabel(_('Maximum distance'))
@@ -2279,6 +2322,38 @@ module.exports = {
         .setMeasurementUnit(gd.MeasurementUnit.getPixel())
         .setGroup(_('Light position'));
       properties
+        .getOrCreate('attachedObject')
+        .setValue('')
+        .setLabel(_('Attached object name'))
+        .setDescription(
+          _(
+            'Object name to follow for the light position. Leave empty to use manual values.'
+          )
+        )
+        .setType('string')
+        .setGroup(_('Attachment'));
+      properties
+        .getOrCreate('attachedOffsetX')
+        .setValue('0')
+        .setLabel(_('Attached offset X'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Attachment'));
+      properties
+        .getOrCreate('attachedOffsetY')
+        .setValue('0')
+        .setLabel(_('Attached offset Y'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Attachment'));
+      properties
+        .getOrCreate('attachedOffsetZ')
+        .setValue('0')
+        .setLabel(_('Attached offset Z'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Attachment'));
+      properties
         .getOrCreate('targetX')
         .setValue('0')
         .setLabel(_('Target X position'))
@@ -2299,6 +2374,49 @@ module.exports = {
         .setType('number')
         .setMeasurementUnit(gd.MeasurementUnit.getPixel())
         .setGroup(_('Target position'));
+      properties
+        .getOrCreate('targetAttachedObject')
+        .setValue('')
+        .setLabel(_('Target attached object name'))
+        .setDescription(
+          _(
+            'Object name to follow for the target position. Leave empty to use manual target values.'
+          )
+        )
+        .setType('string')
+        .setGroup(_('Target attachment'));
+      properties
+        .getOrCreate('targetAttachedOffsetX')
+        .setValue('0')
+        .setLabel(_('Target attached offset X'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Target attachment'));
+      properties
+        .getOrCreate('targetAttachedOffsetY')
+        .setValue('0')
+        .setLabel(_('Target attached offset Y'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Target attachment'));
+      properties
+        .getOrCreate('targetAttachedOffsetZ')
+        .setValue('0')
+        .setLabel(_('Target attached offset Z'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Target attachment'));
+      properties
+        .getOrCreate('rotateOffsetsWithObjectAngle')
+        .setValue('false')
+        .setLabel(_('Rotate offsets with object angle'))
+        .setDescription(
+          _(
+            'Rotate X/Y offsets using the attached object angle, useful for flashlight-like behavior.'
+          )
+        )
+        .setType('boolean')
+        .setGroup(_('Attachment'));
       properties
         .getOrCreate('angle')
         .setValue('45')
