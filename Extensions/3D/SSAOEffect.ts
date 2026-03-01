@@ -12,9 +12,9 @@ namespace gdjs {
       tDiffuse: { value: null },
       tDepth: { value: null },
       resolution: { value: new THREE.Vector2(1, 1) },
-      radius: { value: 80.0 },
-      intensity: { value: 1.0 },
-      bias: { value: 2.0 },
+      radius: { value: 60.0 },
+      intensity: { value: 0.9 },
+      bias: { value: 0.6 },
       sampleCount: { value: 16.0 },
       cameraProjectionMatrix: { value: new THREE.Matrix4() },
       cameraProjectionMatrixInverse: { value: new THREE.Matrix4() },
@@ -77,8 +77,8 @@ namespace gdjs {
       }
 
       vec3 randomHemisphereDirection(vec2 uv, vec3 normal, float index) {
-        float u = hash12(uv * resolution + vec2(index, index * 1.37));
-        float v = hash12(uv.yx * resolution + vec2(index * 2.11, index * 0.73));
+        float u = hash12(uv * vec2(173.3, 157.7) + vec2(index, index * 1.37));
+        float v = hash12(uv.yx * vec2(149.1, 181.9) + vec2(index * 2.11, index * 0.73));
 
         float phi = 6.28318530718 * u;
         float cosTheta = 1.0 - v;
@@ -188,9 +188,9 @@ namespace gdjs {
             this.shaderPass = new THREE_ADDONS.ShaderPass(ssaoShader);
             this._isEnabled = false;
             this._effectEnabled = true;
-            this._radius = 80;
-            this._intensity = 1.0;
-            this._bias = 2.0;
+            this._radius = 60;
+            this._intensity = 0.9;
+            this._bias = 0.6;
             this._samples = 16;
             this._effectiveSamples = 16;
             this._sceneRenderTarget = new THREE.WebGLRenderTarget(1, 1, {
@@ -211,7 +211,7 @@ namespace gdjs {
             this._previousViewport = new THREE.Vector4();
             this._previousScissor = new THREE.Vector4();
             this._renderSize = new THREE.Vector2();
-            this._captureScale = 0.8;
+            this._captureScale = 0.75;
             this._frameTimeSmoothing = 16.6;
             this._framesSinceCapture = 9999;
             this._captureIntervalFrames = 1;
@@ -278,36 +278,10 @@ namespace gdjs {
           }
 
           private _adaptQuality(target: gdjs.EffectsTarget): void {
-            const elapsedTimeMs = Math.max(0, target.getElapsedTime());
-            this._frameTimeSmoothing =
-              this._frameTimeSmoothing * 0.9 + elapsedTimeMs * 0.1;
-
-            let maxAllowedSamples = 24;
-            if (this._frameTimeSmoothing > 40) {
-              this._captureScale = Math.max(0.45, this._captureScale - 0.05);
-              this._captureIntervalFrames = 4;
-              maxAllowedSamples = 8;
-            } else if (this._frameTimeSmoothing > 28) {
-              this._captureScale = Math.max(0.5, this._captureScale - 0.04);
-              this._captureIntervalFrames = 3;
-              maxAllowedSamples = 10;
-            } else if (this._frameTimeSmoothing > 22) {
-              this._captureScale = Math.max(0.6, this._captureScale - 0.03);
-              this._captureIntervalFrames = 2;
-              maxAllowedSamples = 12;
-            } else if (this._frameTimeSmoothing < 14) {
-              this._captureScale = Math.min(0.95, this._captureScale + 0.02);
-              this._captureIntervalFrames = 1;
-              maxAllowedSamples = 24;
-            } else {
-              this._captureIntervalFrames = 1;
-              maxAllowedSamples = 16;
-            }
-
-            this._effectiveSamples = Math.max(
-              4,
-              Math.min(this._samples, maxAllowedSamples)
-            );
+            // Keep quality settings stable to avoid visible AO flickering.
+            this._captureScale = 0.75;
+            this._captureIntervalFrames = 1;
+            this._effectiveSamples = Math.max(4, Math.min(24, this._samples));
           }
 
           private _captureScene(
@@ -446,16 +420,17 @@ namespace gdjs {
             };
           }
           updateFromNetworkSyncData(syncData: SSAONetworkSyncData): void {
-            this._radius = syncData.r;
-            this._intensity = syncData.i;
-            this._bias = syncData.b;
-            this._samples = syncData.s;
+            this._radius = Math.max(0.1, syncData.r);
+            this._intensity = Math.max(0, syncData.i);
+            this._bias = Math.max(0, syncData.b);
+            this._samples = Math.max(4, Math.min(32, Math.round(syncData.s)));
+            this._effectiveSamples = Math.max(4, Math.min(24, this._samples));
             this._effectEnabled = syncData.e;
 
             this.shaderPass.uniforms.radius.value = this._radius;
             this.shaderPass.uniforms.intensity.value = this._intensity;
             this.shaderPass.uniforms.bias.value = this._bias;
-            this.shaderPass.uniforms.sampleCount.value = this._samples;
+            this.shaderPass.uniforms.sampleCount.value = this._effectiveSamples;
             this.shaderPass.enabled = this._effectEnabled;
           }
         })();

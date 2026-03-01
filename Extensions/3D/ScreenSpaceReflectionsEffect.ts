@@ -14,8 +14,8 @@ namespace gdjs {
       resolution: { value: new THREE.Vector2(1, 1) },
       intensity: { value: 0.85 },
       maxDistance: { value: 650.0 },
-      thickness: { value: 10.0 },
-      maxSteps: { value: 28.0 },
+      thickness: { value: 8.0 },
+      maxSteps: { value: 24.0 },
       cameraProjectionMatrix: { value: new THREE.Matrix4() },
       cameraProjectionMatrixInverse: { value: new THREE.Matrix4() },
     },
@@ -245,7 +245,7 @@ namespace gdjs {
             this._effectEnabled = true;
             this._intensity = 0.85;
             this._maxDistance = 650;
-            this._thickness = 10;
+            this._thickness = 8;
             this._sceneRenderTarget = new THREE.WebGLRenderTarget(1, 1, {
               minFilter: THREE.LinearFilter,
               magFilter: THREE.LinearFilter,
@@ -266,8 +266,8 @@ namespace gdjs {
             this._previousViewport = new THREE.Vector4();
             this._previousScissor = new THREE.Vector4();
             this._renderSize = new THREE.Vector2();
-            this._captureScale = 0.8;
-            this._raySteps = 28;
+            this._captureScale = 0.75;
+            this._raySteps = 24;
             this._frameTimeSmoothing = 16.6;
             this._framesSinceCapture = 9999;
             this._captureIntervalFrames = 1;
@@ -336,29 +336,10 @@ namespace gdjs {
           }
 
           private _adaptQuality(target: gdjs.EffectsTarget): void {
-            const elapsedTimeMs = Math.max(0, target.getElapsedTime());
-            this._frameTimeSmoothing =
-              this._frameTimeSmoothing * 0.9 + elapsedTimeMs * 0.1;
-
-            if (this._frameTimeSmoothing > 28) {
-              this._captureScale = Math.max(0.5, this._captureScale - 0.05);
-              this._raySteps = Math.max(12, this._raySteps - 2);
-            } else if (this._frameTimeSmoothing > 22) {
-              this._captureScale = Math.max(0.6, this._captureScale - 0.03);
-              this._raySteps = Math.max(16, this._raySteps - 1);
-            } else if (this._frameTimeSmoothing < 14) {
-              this._captureScale = Math.min(0.95, this._captureScale + 0.02);
-              this._raySteps = Math.min(36, this._raySteps + 1);
-            }
-
-            this._captureIntervalFrames =
-              this._frameTimeSmoothing > 40
-                ? 4
-                : this._frameTimeSmoothing > 28
-                  ? 3
-                  : this._frameTimeSmoothing > 22
-                  ? 2
-                  : 1;
+            // Keep quality parameters stable to avoid temporal flicker/flashes.
+            this._captureScale = 0.75;
+            this._raySteps = 24;
+            this._captureIntervalFrames = 1;
           }
 
           private _captureScene(
@@ -492,9 +473,9 @@ namespace gdjs {
           updateFromNetworkSyncData(
             syncData: ScreenSpaceReflectionsNetworkSyncData
           ): void {
-            this._intensity = syncData.i;
-            this._maxDistance = syncData.md;
-            this._thickness = syncData.t;
+            this._intensity = Math.max(0, syncData.i);
+            this._maxDistance = Math.max(0, syncData.md);
+            this._thickness = Math.max(0.0001, syncData.t);
             this._effectEnabled = syncData.e;
 
             this.shaderPass.uniforms.intensity.value = this._intensity;

@@ -2697,7 +2697,7 @@ module.exports = {
         .setDescription(_('Maximum reflection tracing distance (balanced for performance).'));
       properties
         .getOrCreate('thickness')
-        .setValue('10')
+        .setValue('8')
         .setLabel(_('Thickness'))
         .setType('number')
         .setMeasurementUnit(gd.MeasurementUnit.getPixel())
@@ -2723,20 +2723,20 @@ module.exports = {
         .setType('boolean');
       properties
         .getOrCreate('radius')
-        .setValue('80')
+        .setValue('60')
         .setLabel(_('Radius'))
         .setType('number')
         .setMeasurementUnit(gd.MeasurementUnit.getPixel())
         .setDescription(_('Sampling radius in view space.'));
       properties
         .getOrCreate('intensity')
-        .setValue('1')
+        .setValue('0.9')
         .setLabel(_('Intensity'))
         .setType('number')
         .setDescription(_('How strong occlusion darkening is.'));
       properties
         .getOrCreate('bias')
-        .setValue('2')
+        .setValue('0.6')
         .setLabel(_('Bias'))
         .setType('number')
         .setMeasurementUnit(gd.MeasurementUnit.getPixel())
