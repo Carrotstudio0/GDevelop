@@ -12,6 +12,10 @@ namespace gdjs {
     a: number;
     p: number;
     dc: number;
+    sb: number;
+    snb: number;
+    sn: number;
+    sf: number;
   }
   gdjs.PixiFiltersTools.registerFilterCreator(
     'Scene3D::SpotLight',
@@ -36,10 +40,15 @@ namespace gdjs {
           private _penumbra: float = 0.1;
           private _decay: float = 2;
           private _shadowMapSize: float = 1024;
+          private _shadowBias: float = -0.001;
+          private _shadowNormalBias: float = 0.02;
+          private _shadowNear: float = 1;
+          private _shadowFar: float = 10000;
 
           private _isEnabled: boolean = false;
           private _light: THREE.SpotLight;
           private _shadowMapDirty = true;
+          private _shadowCameraDirty = true;
 
           constructor() {
             this._light = new THREE.SpotLight();
@@ -49,6 +58,13 @@ namespace gdjs {
             this._light.decay = this._decay;
             this._updatePosition();
             this._updateTarget();
+
+            // Configure shadow defaults
+            this._light.shadow.bias = this._shadowBias;
+            this._light.shadow.normalBias = this._shadowNormalBias;
+            this._light.shadow.camera.near = this._shadowNear;
+            this._light.shadow.camera.far = this._shadowFar;
+            this._light.shadow.camera.updateProjectionMatrix();
           }
 
           private _updateShadowMapSize(): void {
@@ -66,6 +82,27 @@ namespace gdjs {
             this._light.shadow.map?.dispose();
             this._light.shadow.map = null;
             this._light.shadow.needsUpdate = true;
+          }
+
+          private _updateShadowCamera(): void {
+            if (!this._shadowCameraDirty) {
+              return;
+            }
+            this._shadowCameraDirty = false;
+
+            this._light.shadow.camera.near = this._shadowNear;
+            
+            // Auto-adjust far plane if distance is explicitly set
+            const effectiveFar = (this._distance > 0) ? 
+                Math.min(this._shadowFar, this._distance + 100) : 
+                this._shadowFar;
+            
+            this._light.shadow.camera.far = effectiveFar;
+            
+            // FOV of shadow camera for SpotLight should match the light's angle (angle is half of fov)
+            this._light.shadow.camera.fov = this._angle * 2;
+            
+            this._light.shadow.camera.updateProjectionMatrix();
           }
 
           private _updatePosition(): void {
@@ -140,7 +177,11 @@ namespace gdjs {
             return true;
           }
           updatePreRender(target: gdjs.EffectsTarget): any {
+            this._updateShadowCamera();
             this._updateShadowMapSize();
+
+            this._light.shadow.bias = this._shadowBias;
+            this._light.shadow.normalBias = this._shadowNormalBias;
           }
           updateDoubleParameter(parameterName: string, value: number): void {
             if (parameterName === 'intensity') {
@@ -166,15 +207,27 @@ namespace gdjs {
             } else if (parameterName === 'distance') {
               this._distance = value;
               this._light.distance = value;
+              this._shadowCameraDirty = true;
             } else if (parameterName === 'angle') {
               this._angle = value;
               this._light.angle = gdjs.toRad(value);
+              this._shadowCameraDirty = true;
             } else if (parameterName === 'penumbra') {
               this._penumbra = value;
               this._light.penumbra = value;
             } else if (parameterName === 'decay') {
               this._decay = value;
               this._light.decay = value;
+            } else if (parameterName === 'shadowBias') {
+              this._shadowBias = -value;
+            } else if (parameterName === 'shadowNormalBias') {
+              this._shadowNormalBias = value;
+            } else if (parameterName === 'shadowNear') {
+              this._shadowNear = value;
+              this._shadowCameraDirty = true;
+            } else if (parameterName === 'shadowFar') {
+              this._shadowFar = value;
+              this._shadowCameraDirty = true;
             }
           }
           getDoubleParameter(parameterName: string): number {
@@ -200,6 +253,14 @@ namespace gdjs {
               return this._penumbra;
             } else if (parameterName === 'decay') {
               return this._decay;
+            } else if (parameterName === 'shadowBias') {
+              return -this._shadowBias;
+            } else if (parameterName === 'shadowNormalBias') {
+              return this._shadowNormalBias;
+            } else if (parameterName === 'shadowNear') {
+              return this._shadowNear;
+            } else if (parameterName === 'shadowFar') {
+              return this._shadowFar;
             }
             return 0;
           }
@@ -259,6 +320,10 @@ namespace gdjs {
               a: this._angle,
               p: this._penumbra,
               dc: this._decay,
+              sb: this._shadowBias,
+              snb: this._shadowNormalBias,
+              sn: this._shadowNear,
+              sf: this._shadowFar,
             };
           }
           updateFromNetworkSyncData(
@@ -276,12 +341,17 @@ namespace gdjs {
             this._angle = syncData.a;
             this._penumbra = syncData.p;
             this._decay = syncData.dc;
+            this._shadowBias = syncData.sb;
+            this._shadowNormalBias = syncData.snb;
+            this._shadowNear = syncData.sn;
+            this._shadowFar = syncData.sf;
             this._light.distance = syncData.d;
             this._light.angle = gdjs.toRad(syncData.a);
             this._light.penumbra = syncData.p;
             this._light.decay = syncData.dc;
             this._updatePosition();
             this._updateTarget();
+            this._shadowCameraDirty = true;
           }
         })();
       }

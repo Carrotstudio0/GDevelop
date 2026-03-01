@@ -2193,6 +2193,38 @@ module.exports = {
         .setLabel(_('Shadow quality'))
         .setType('choice')
         .setGroup(_('Shadows'));
+      properties
+        .getOrCreate('shadowBias')
+        .setValue('0.001')
+        .setLabel(_('Shadow bias'))
+        .setDescription(
+          _('Small offset to prevent shadow artifacts (acne). Default: 0.001.')
+        )
+        .setType('number')
+        .setGroup(_('Shadows'));
+      properties
+        .getOrCreate('shadowNormalBias')
+        .setValue('0.02')
+        .setLabel(_('Shadow normal bias'))
+        .setDescription(
+          _('Offset along object normals to prevent acne on curved surfaces. Default: 0.02.')
+        )
+        .setType('number')
+        .setGroup(_('Shadows'));
+      properties
+        .getOrCreate('shadowNear')
+        .setValue('1')
+        .setLabel(_('Shadow near'))
+        .setDescription(_('Minimum distance for shadows to be cast.'))
+        .setType('number')
+        .setGroup(_('Shadows'));
+      properties
+        .getOrCreate('shadowFar')
+        .setValue('10000')
+        .setLabel(_('Shadow far'))
+        .setDescription(_('Maximum distance for shadows to be cast.'))
+        .setType('number')
+        .setGroup(_('Shadows'));
     }
     {
       const effect = extension
@@ -2327,6 +2359,29 @@ module.exports = {
         .addChoice('high', _('High quality'))
         .setLabel(_('Shadow quality'))
         .setType('choice')
+        .setGroup(_('Shadows'));
+      properties
+        .getOrCreate('shadowBias')
+        .setValue('0.001')
+        .setLabel(_('Shadow bias'))
+        .setDescription(
+          _('Small offset to prevent shadow artifacts (acne). Default: 0.001.')
+        )
+        .setType('number')
+        .setGroup(_('Shadows'));
+      properties
+        .getOrCreate('shadowNear')
+        .setValue('1')
+        .setLabel(_('Shadow near'))
+        .setDescription(_('Minimum distance for shadows to be cast.'))
+        .setType('number')
+        .setGroup(_('Shadows'));
+      properties
+        .getOrCreate('shadowFar')
+        .setValue('10000')
+        .setLabel(_('Shadow far'))
+        .setDescription(_('Maximum distance for shadows to be cast.'))
+        .setType('number')
         .setGroup(_('Shadows'));
     }
     {
