@@ -266,6 +266,8 @@ namespace gdjs {
      * Add a constraint to the tracked joints and return its ID.
      */
     addJoint(constraint: Jolt.Constraint): integer {
+      // @ts-ignore - AddConstraint exists in the WASM module but not in type defs
+      this.physicsSystem.AddConstraint(constraint);
       this.joints[this._nextJointId.toString(10)] = constraint;
       return this._nextJointId++;
     }
@@ -302,6 +304,8 @@ namespace gdjs {
       jointId = jointId.toString(10);
       if (this.joints.hasOwnProperty(jointId)) {
         const constraint = this.joints[jointId];
+        // @ts-ignore - RemoveConstraint exists in the WASM module but not in type defs
+        this.physicsSystem.RemoveConstraint(constraint);
         Jolt.destroy(constraint);
         delete this.joints[jointId];
       }
@@ -2209,9 +2213,6 @@ namespace gdjs {
       );
       Jolt.destroy(settings);
 
-      this._sharedData.bodyInterface.ActivateConstraint(
-        Jolt.castObject(constraint, Jolt.TwoBodyConstraint)
-      );
       const jointId = this._sharedData.addJoint(constraint);
       variable.setNumber(jointId);
     }
@@ -2255,9 +2256,6 @@ namespace gdjs {
       );
       Jolt.destroy(settings);
 
-      this._sharedData.bodyInterface.ActivateConstraint(
-        Jolt.castObject(constraint, Jolt.TwoBodyConstraint)
-      );
       const jointId = this._sharedData.addJoint(constraint);
       variable.setNumber(jointId);
     }
@@ -2346,9 +2344,6 @@ namespace gdjs {
       );
       Jolt.destroy(settings);
 
-      this._sharedData.bodyInterface.ActivateConstraint(
-        Jolt.castObject(constraint, Jolt.TwoBodyConstraint)
-      );
       const jointId = this._sharedData.addJoint(constraint);
       variable.setNumber(jointId);
     }
@@ -2393,9 +2388,6 @@ namespace gdjs {
       );
       Jolt.destroy(settings);
 
-      this._sharedData.bodyInterface.ActivateConstraint(
-        Jolt.castObject(constraint, Jolt.TwoBodyConstraint)
-      );
       const jointId = this._sharedData.addJoint(constraint);
       variable.setNumber(jointId);
     }
@@ -2449,9 +2441,6 @@ namespace gdjs {
       );
       Jolt.destroy(settings);
 
-      this._sharedData.bodyInterface.ActivateConstraint(
-        Jolt.castObject(constraint, Jolt.TwoBodyConstraint)
-      );
       const jointId = this._sharedData.addJoint(constraint);
       variable.setNumber(jointId);
     }
@@ -2523,9 +2512,6 @@ namespace gdjs {
       );
       Jolt.destroy(settings);
 
-      this._sharedData.bodyInterface.ActivateConstraint(
-        Jolt.castObject(constraint, Jolt.TwoBodyConstraint)
-      );
       const jointId = this._sharedData.addJoint(constraint);
       variable.setNumber(jointId);
     }
