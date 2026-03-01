@@ -151,7 +151,9 @@ namespace gdjs {
         vec3 viewPos = viewPositionFromDepth(vUv, depth);
         vec3 normal = reconstructNormal(vUv, depth);
         float ao = computeAO(viewPos, normal, vUv);
-        gl_FragColor = vec4(baseColor.rgb * ao, baseColor.a);
+        float aoBlend = 0.75;
+        vec3 aoColor = mix(baseColor.rgb, baseColor.rgb * ao, aoBlend);
+        gl_FragColor = vec4(aoColor, baseColor.a);
       }
     `,
   };
@@ -186,6 +188,7 @@ namespace gdjs {
 
           constructor() {
             this.shaderPass = new THREE_ADDONS.ShaderPass(ssaoShader);
+            gdjs.markScene3DPostProcessingPass(this.shaderPass, 'SSAO');
             this._isEnabled = false;
             this._effectEnabled = true;
             this._radius = 60;
@@ -215,6 +218,9 @@ namespace gdjs {
             this._frameTimeSmoothing = 16.6;
             this._framesSinceCapture = 9999;
             this._captureIntervalFrames = 1;
+            // Kept for backward compatibility while shared capture is active.
+            void this._updateRenderTargetSize;
+            void this._captureScene;
           }
 
           isEnabled(target: EffectsTarget): boolean {
@@ -278,10 +284,16 @@ namespace gdjs {
           }
 
           private _adaptQuality(target: gdjs.EffectsTarget): void {
-            // Keep quality settings stable to avoid visible AO flickering.
-            this._captureScale = 0.75;
+            if (!(target instanceof gdjs.Layer)) {
+              return;
+            }
+            const quality = gdjs.getScene3DPostProcessingQualityProfile(target);
+            this._captureScale = quality.captureScale;
             this._captureIntervalFrames = 1;
-            this._effectiveSamples = Math.max(4, Math.min(24, this._samples));
+            this._effectiveSamples = Math.max(
+              4,
+              Math.min(quality.ssaoSamples, this._samples)
+            );
           }
 
           private _captureScene(
@@ -345,7 +357,20 @@ namespace gdjs {
             }
 
             this._adaptQuality(target);
-            this._updateRenderTargetSize(target, threeRenderer);
+            if (!gdjs.isScene3DPostProcessingEnabled(target)) {
+              this.shaderPass.enabled = false;
+              return;
+            }
+
+            const sharedCapture = gdjs.captureScene3DSharedTextures(
+              target,
+              threeRenderer,
+              threeScene,
+              threeCamera
+            );
+            if (!sharedCapture || !sharedCapture.depthTexture) {
+              return;
+            }
 
             threeCamera.updateMatrixWorld();
             threeCamera.updateProjectionMatrix();
@@ -353,6 +378,12 @@ namespace gdjs {
               .copy(threeCamera.projectionMatrix)
               .invert();
 
+            this.shaderPass.enabled = true;
+            this.shaderPass.uniforms.resolution.value.set(
+              sharedCapture.width,
+              sharedCapture.height
+            );
+            this.shaderPass.uniforms.tDepth.value = sharedCapture.depthTexture;
             this.shaderPass.uniforms.cameraProjectionMatrix.value.copy(
               threeCamera.projectionMatrix
             );
@@ -363,12 +394,6 @@ namespace gdjs {
             this.shaderPass.uniforms.intensity.value = this._intensity;
             this.shaderPass.uniforms.bias.value = this._bias;
             this.shaderPass.uniforms.sampleCount.value = this._effectiveSamples;
-
-            this._framesSinceCapture += 1;
-            if (this._framesSinceCapture >= this._captureIntervalFrames) {
-              this._captureScene(threeRenderer, threeScene, threeCamera);
-              this._framesSinceCapture = 0;
-            }
           }
           updateDoubleParameter(parameterName: string, value: number): void {
             if (parameterName === 'radius') {

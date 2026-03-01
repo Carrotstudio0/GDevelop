@@ -2638,11 +2638,38 @@ module.exports = {
     }
     {
       const effect = extension
+        .addEffect('PostProcessingStack')
+        .setFullName(_('Post-processing stack'))
+        .setDescription(
+          _(
+            'Master controller for 3D post-processing: captures scene/depth once, auto-orders effects, and applies shared quality.'
+          )
+        )
+        .markAsNotWorkingForObjects()
+        .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/PostProcessingSharedResources.js')
+        .addIncludeFile('Extensions/3D/PostProcessingStackEffect.js');
+      const properties = effect.getProperties();
+      properties
+        .getOrCreate('enabled')
+        .setValue('true')
+        .setLabel(_('Enabled'))
+        .setType('boolean');
+      properties
+        .getOrCreate('qualityMode')
+        .setValue('medium')
+        .setLabel(_('Quality mode'))
+        .setType('string')
+        .setDescription(_('Use: low, medium, or high.'));
+    }
+    {
+      const effect = extension
         .addEffect('Bloom')
         .setFullName(_('Bloom'))
         .setDescription(_('Apply a bloom effect.'))
         .markAsNotWorkingForObjects()
         .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/PostProcessingSharedResources.js')
         .addIncludeFile('Extensions/3D/BloomEffect.js');
       const properties = effect.getProperties();
       properties
@@ -2675,6 +2702,7 @@ module.exports = {
         )
         .markAsNotWorkingForObjects()
         .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/PostProcessingSharedResources.js')
         .addIncludeFile('Extensions/3D/ScreenSpaceReflectionsEffect.js');
       const properties = effect.getProperties();
       properties
@@ -2684,20 +2712,20 @@ module.exports = {
         .setType('boolean');
       properties
         .getOrCreate('intensity')
-        .setValue('0.85')
+        .setValue('0.75')
         .setLabel(_('Intensity'))
         .setType('number')
         .setDescription(_('Overall strength of reflected light.'));
       properties
         .getOrCreate('maxDistance')
-        .setValue('650')
+        .setValue('420')
         .setLabel(_('Max distance'))
         .setType('number')
         .setMeasurementUnit(gd.MeasurementUnit.getPixel())
         .setDescription(_('Maximum reflection tracing distance (balanced for performance).'));
       properties
         .getOrCreate('thickness')
-        .setValue('8')
+        .setValue('4')
         .setLabel(_('Thickness'))
         .setType('number')
         .setMeasurementUnit(gd.MeasurementUnit.getPixel())
@@ -2714,6 +2742,7 @@ module.exports = {
         )
         .markAsNotWorkingForObjects()
         .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/PostProcessingSharedResources.js')
         .addIncludeFile('Extensions/3D/SSAOEffect.js');
       const properties = effect.getProperties();
       properties
@@ -2759,6 +2788,7 @@ module.exports = {
         )
         .markAsNotWorkingForObjects()
         .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/PostProcessingSharedResources.js')
         .addIncludeFile('Extensions/3D/VolumetricFogEffect.js');
       const properties = effect.getProperties();
       properties
@@ -2802,6 +2832,7 @@ module.exports = {
         )
         .markAsNotWorkingForObjects()
         .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/PostProcessingSharedResources.js')
         .addIncludeFile('Extensions/3D/DepthOfFieldEffect.js');
       const properties = effect.getProperties();
       properties

@@ -34,6 +34,7 @@ namespace gdjs {
       density: { value: 0.012 },
       lightScatter: { value: 1.0 },
       maxDistance: { value: 1200.0 },
+      stepCount: { value: 36.0 },
       lightCount: { value: 0 },
       lightPositions: { value: makeVector3Array(MAX_VOLUMETRIC_LIGHTS) },
       lightColors: { value: makeVector3Array(MAX_VOLUMETRIC_LIGHTS) },
@@ -52,7 +53,7 @@ namespace gdjs {
       precision highp float;
 
       #define MAX_VOLUMETRIC_LIGHTS ${MAX_VOLUMETRIC_LIGHTS}
-      #define VOLUMETRIC_STEPS 48
+      #define MAX_VOLUMETRIC_STEPS 64
 
       uniform sampler2D tDiffuse;
       uniform sampler2D tDepth;
@@ -61,6 +62,7 @@ namespace gdjs {
       uniform float density;
       uniform float lightScatter;
       uniform float maxDistance;
+      uniform float stepCount;
       uniform int lightCount;
       uniform vec3 lightPositions[MAX_VOLUMETRIC_LIGHTS];
       uniform vec3 lightColors[MAX_VOLUMETRIC_LIGHTS];
@@ -95,11 +97,15 @@ namespace gdjs {
           }
         }
 
-        float stepLength = rayLength / float(VOLUMETRIC_STEPS);
+        float clampedStepCount = clamp(stepCount, 8.0, float(MAX_VOLUMETRIC_STEPS));
+        float stepLength = rayLength / clampedStepCount;
         float transmittance = 1.0;
         vec3 accumulatedFog = vec3(0.0);
 
-        for (int step = 0; step < VOLUMETRIC_STEPS; step++) {
+        for (int step = 0; step < MAX_VOLUMETRIC_STEPS; step++) {
+          if (float(step) >= clampedStepCount) {
+            break;
+          }
           float sampleDistance = (float(step) + 0.5) * stepLength;
           vec3 samplePosition = rayDirection * sampleDistance;
 
@@ -168,6 +174,7 @@ namespace gdjs {
 
           constructor() {
             this.shaderPass = new THREE_ADDONS.ShaderPass(volumetricFogShader);
+            gdjs.markScene3DPostProcessingPass(this.shaderPass, 'FOG');
             this._isEnabled = false;
             this._effectEnabled = true;
             this._fogColor = new THREE.Color(0xc8dcff);
@@ -211,6 +218,9 @@ namespace gdjs {
             this.shaderPass.uniforms.lightColors.value = this._lightColors;
             this.shaderPass.uniforms.lightRanges.value = this._lightRanges;
             this.shaderPass.enabled = true;
+            // Kept for backward compatibility while shared capture is active.
+            void this._updateRenderTargetSize;
+            void this._captureScene;
           }
 
           isEnabled(target: EffectsTarget): boolean {
@@ -367,11 +377,30 @@ namespace gdjs {
               return;
             }
 
-            this._updateRenderTargetSize(target, threeRenderer);
+            if (!gdjs.isScene3DPostProcessingEnabled(target)) {
+              this.shaderPass.enabled = false;
+              return;
+            }
+
+            const sharedCapture = gdjs.captureScene3DSharedTextures(
+              target,
+              threeRenderer,
+              threeScene,
+              threeCamera
+            );
+            if (!sharedCapture || !sharedCapture.depthTexture) {
+              return;
+            }
 
             threeCamera.updateMatrixWorld();
             threeCamera.matrixWorldInverse.copy(threeCamera.matrixWorld).invert();
 
+            this.shaderPass.enabled = true;
+            this.shaderPass.uniforms.resolution.value.set(
+              sharedCapture.width,
+              sharedCapture.height
+            );
+            this.shaderPass.uniforms.tDepth.value = sharedCapture.depthTexture;
             this.shaderPass.uniforms.cameraProjectionMatrixInverse.value.copy(
               threeCamera.projectionMatrixInverse
             );
@@ -383,8 +412,9 @@ namespace gdjs {
             this.shaderPass.uniforms.density.value = this._density;
             this.shaderPass.uniforms.lightScatter.value = this._lightScatter;
             this.shaderPass.uniforms.maxDistance.value = this._maxDistance;
+            this.shaderPass.uniforms.stepCount.value =
+              sharedCapture.quality.fogSteps;
 
-            this._captureScene(threeRenderer, threeScene, threeCamera);
             this._updateLightsUniforms(threeScene, threeCamera);
           }
 

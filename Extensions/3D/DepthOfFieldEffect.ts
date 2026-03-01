@@ -122,6 +122,7 @@ namespace gdjs {
 
           constructor() {
             this.shaderPass = new THREE_ADDONS.ShaderPass(depthOfFieldShader);
+            gdjs.markScene3DPostProcessingPass(this.shaderPass, 'DOF');
             this._isEnabled = false;
             this._effectEnabled = true;
             this._focusDistance = 400;
@@ -151,6 +152,9 @@ namespace gdjs {
             this._previousViewport = new THREE.Vector4();
             this._previousScissor = new THREE.Vector4();
             this._renderSize = new THREE.Vector2();
+            // Kept for backward compatibility while shared capture is active.
+            void this._updateRenderTargetSize;
+            void this._captureScene;
           }
 
           isEnabled(target: EffectsTarget): boolean {
@@ -254,17 +258,35 @@ namespace gdjs {
               return;
             }
 
-            this._updateRenderTargetSize(threeRenderer);
+            if (!gdjs.isScene3DPostProcessingEnabled(target)) {
+              this.shaderPass.enabled = false;
+              return;
+            }
+
+            const sharedCapture = gdjs.captureScene3DSharedTextures(
+              target,
+              threeRenderer,
+              threeScene,
+              threeCamera
+            );
+            if (!sharedCapture || !sharedCapture.depthTexture) {
+              return;
+            }
 
             threeCamera.updateMatrixWorld();
+            this.shaderPass.enabled = true;
+            this.shaderPass.uniforms.resolution.value.set(
+              sharedCapture.width,
+              sharedCapture.height
+            );
+            this.shaderPass.uniforms.tDepth.value = sharedCapture.depthTexture;
             this.shaderPass.uniforms.cameraProjectionMatrixInverse.value.copy(
               threeCamera.projectionMatrixInverse
             );
             this.shaderPass.uniforms.focusDistance.value = this._focusDistance;
             this.shaderPass.uniforms.focusRange.value = this._focusRange;
-            this.shaderPass.uniforms.maxBlur.value = this._maxBlur;
-
-            this._captureScene(threeRenderer, threeScene, threeCamera);
+            this.shaderPass.uniforms.maxBlur.value =
+              this._maxBlur * sharedCapture.quality.dofBlurScale;
           }
 
           updateDoubleParameter(parameterName: string, value: number): void {

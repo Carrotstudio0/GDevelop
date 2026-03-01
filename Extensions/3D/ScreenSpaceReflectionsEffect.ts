@@ -12,9 +12,9 @@ namespace gdjs {
       tSceneColor: { value: null },
       tDepth: { value: null },
       resolution: { value: new THREE.Vector2(1, 1) },
-      intensity: { value: 0.85 },
-      maxDistance: { value: 650.0 },
-      thickness: { value: 8.0 },
+      intensity: { value: 0.75 },
+      maxDistance: { value: 420.0 },
+      thickness: { value: 4.0 },
       maxSteps: { value: 24.0 },
       cameraProjectionMatrix: { value: new THREE.Matrix4() },
       cameraProjectionMatrixInverse: { value: new THREE.Matrix4() },
@@ -77,13 +77,21 @@ namespace gdjs {
         return clamp(1.0 - facing * facing, 0.08, 0.8);
       }
 
-      vec3 sampleReflectionColor(vec2 uv) {
-        vec3 currentFrame = texture2D(tDiffuse, uv).rgb;
+      vec3 sampleReflectionColor(vec2 uv, float roughness) {
         vec3 capturedFrame = texture2D(tSceneColor, uv).rgb;
-        return mix(currentFrame, capturedFrame, 0.65);
+        vec3 currentFrame = texture2D(tDiffuse, uv).rgb;
+        float currentFrameWeight = 0.12 * (1.0 - roughness);
+        vec3 reflectionColor = mix(capturedFrame, currentFrame, currentFrameWeight);
+        return min(reflectionColor, vec3(4.0));
       }
 
-      vec4 refineHit(vec3 originVS, vec3 lowPos, vec3 highPos, float roughness) {
+      vec4 refineHit(
+        vec3 originVS,
+        vec3 lowPos,
+        vec3 highPos,
+        float roughness,
+        vec3 reflectedDirVS
+      ) {
         vec3 a = lowPos;
         vec3 b = highPos;
         vec3 mid = highPos;
@@ -114,9 +122,20 @@ namespace gdjs {
         if (finalUv.x <= 0.0 || finalUv.x >= 1.0 || finalUv.y <= 0.0 || finalUv.y >= 1.0) {
           return vec4(0.0);
         }
-        vec3 hitColor = sampleReflectionColor(finalUv);
+        float finalDepth = texture2D(tDepth, finalUv).x;
+        if (finalDepth >= 1.0) {
+          return vec4(0.0);
+        }
+
+        vec3 hitNormal = reconstructNormal(finalUv, finalDepth);
+        float normalAlignment = clamp(dot(hitNormal, -reflectedDirVS), 0.0, 1.0);
+        if (normalAlignment <= 0.05) {
+          return vec4(0.0);
+        }
+
+        vec3 hitColor = sampleReflectionColor(finalUv, roughness);
         float hitDistance = length(mid - originVS);
-        return vec4(hitColor, hitDistance);
+        return vec4(hitColor * normalAlignment, hitDistance);
       }
 
       vec4 traceReflection(vec3 originVS, vec3 reflectedDirVS, float roughness) {
@@ -145,10 +164,17 @@ namespace gdjs {
 
           vec3 depthViewPos = viewPositionFromDepth(uv, sampledDepth);
           float signedDepth = depthViewPos.z - rayPos.z;
-          float hitThickness = max(thickness, stepSize * 1.35) * (1.0 + roughness * 0.5);
+          float hitThickness =
+            max(thickness, stepSize * 0.95) * (1.0 + roughness * 0.35);
 
-          if (signedDepth >= -hitThickness && signedDepth <= hitThickness * 1.8) {
-            hit = refineHit(originVS, previousRayPos, rayPos, roughness);
+          if (signedDepth >= -hitThickness && signedDepth <= hitThickness) {
+            hit = refineHit(
+              originVS,
+              previousRayPos,
+              rayPos,
+              roughness,
+              reflectedDirVS
+            );
             break;
           }
         }
@@ -184,17 +210,17 @@ namespace gdjs {
             vec2(0.0),
             vec2(1.0)
           );
-          reflectionColor = sampleReflectionColor(fallbackUv);
+          reflectionColor = sampleReflectionColor(fallbackUv, roughness);
           rayDistance = maxDistance * 0.45;
         }
 
         float fresnel = pow(1.0 - max(dot(normal, -normalize(viewPos)), 0.0), 4.0);
         float distanceFade = clamp(1.0 - rayDistance / maxDistance, 0.0, 1.0);
         float edgeFade =
-          smoothstep(0.01, 0.10, vUv.x) *
-          smoothstep(0.01, 0.10, vUv.y) *
-          smoothstep(0.01, 0.10, 1.0 - vUv.x) *
-          smoothstep(0.01, 0.10, 1.0 - vUv.y);
+          smoothstep(0.02, 0.16, vUv.x) *
+          smoothstep(0.02, 0.16, vUv.y) *
+          smoothstep(0.02, 0.16, 1.0 - vUv.x) *
+          smoothstep(0.02, 0.16, 1.0 - vUv.y);
         float reflectionStrength =
           intensity *
           (0.25 + 0.75 * (1.0 - roughness)) *
@@ -241,11 +267,12 @@ namespace gdjs {
             this.shaderPass = new THREE_ADDONS.ShaderPass(
               screenSpaceReflectionsShader
             );
+            gdjs.markScene3DPostProcessingPass(this.shaderPass, 'SSR');
             this._isEnabled = false;
             this._effectEnabled = true;
-            this._intensity = 0.85;
-            this._maxDistance = 650;
-            this._thickness = 8;
+            this._intensity = 0.75;
+            this._maxDistance = 420;
+            this._thickness = 4;
             this._sceneRenderTarget = new THREE.WebGLRenderTarget(1, 1, {
               minFilter: THREE.LinearFilter,
               magFilter: THREE.LinearFilter,
@@ -271,6 +298,9 @@ namespace gdjs {
             this._frameTimeSmoothing = 16.6;
             this._framesSinceCapture = 9999;
             this._captureIntervalFrames = 1;
+            // Kept for backward compatibility while shared capture is active.
+            void this._updateRenderTargetSize;
+            void this._captureScene;
           }
 
           isEnabled(target: EffectsTarget): boolean {
@@ -336,9 +366,12 @@ namespace gdjs {
           }
 
           private _adaptQuality(target: gdjs.EffectsTarget): void {
-            // Keep quality parameters stable to avoid temporal flicker/flashes.
-            this._captureScale = 0.75;
-            this._raySteps = 24;
+            if (!(target instanceof gdjs.Layer)) {
+              return;
+            }
+            const quality = gdjs.getScene3DPostProcessingQualityProfile(target);
+            this._captureScale = quality.captureScale;
+            this._raySteps = quality.ssrSteps;
             this._captureIntervalFrames = 1;
           }
 
@@ -403,13 +436,34 @@ namespace gdjs {
             }
 
             this._adaptQuality(target);
-            this._updateRenderTargetSize(target, threeRenderer);
+            if (!gdjs.isScene3DPostProcessingEnabled(target)) {
+              this.shaderPass.enabled = false;
+              return;
+            }
+
+            const sharedCapture = gdjs.captureScene3DSharedTextures(
+              target,
+              threeRenderer,
+              threeScene,
+              threeCamera
+            );
+            if (!sharedCapture || !sharedCapture.depthTexture) {
+              return;
+            }
 
             threeCamera.updateMatrixWorld();
             threeCamera.updateProjectionMatrix();
             threeCamera.projectionMatrixInverse
               .copy(threeCamera.projectionMatrix)
               .invert();
+            this.shaderPass.enabled = true;
+            this.shaderPass.uniforms.resolution.value.set(
+              sharedCapture.width,
+              sharedCapture.height
+            );
+            this.shaderPass.uniforms.tSceneColor.value =
+              sharedCapture.colorTexture;
+            this.shaderPass.uniforms.tDepth.value = sharedCapture.depthTexture;
             this.shaderPass.uniforms.cameraProjectionMatrix.value.copy(
               threeCamera.projectionMatrix
             );
@@ -420,12 +474,6 @@ namespace gdjs {
             this.shaderPass.uniforms.maxDistance.value = this._maxDistance;
             this.shaderPass.uniforms.thickness.value = this._thickness;
             this.shaderPass.uniforms.maxSteps.value = this._raySteps;
-
-            this._framesSinceCapture += 1;
-            if (this._framesSinceCapture >= this._captureIntervalFrames) {
-              this._captureScene(threeRenderer, threeScene, threeCamera);
-              this._framesSinceCapture = 0;
-            }
           }
           updateDoubleParameter(parameterName: string, value: number): void {
             if (parameterName === 'intensity') {
