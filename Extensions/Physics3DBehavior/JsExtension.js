@@ -2180,6 +2180,38 @@ module.exports = {
         .addParameter('expression', _('Half cone angle (degrees)'))
         .setFunctionName('setConeJointHalfAngle');
 
+      // ==================== SwingTwist Joint ====================
+
+      aut
+        .addScopedAction(
+          'AddSwingTwistJoint',
+          _('Add a SwingTwist joint'),
+          _(
+            'Add a SwingTwist joint (professional constraint for shoulders, hips, ragdolls). Allows independent control of swing cone and twist range.'
+          ),
+          _(
+            'Add SwingTwist joint between _PARAM0_ and _PARAM2_ at (_PARAM3_, _PARAM4_, _PARAM5_), store ID in _PARAM12_'
+          ),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('objectPtr', _('Other object'))
+        .addParameter('expression', _('Anchor X (pixels)'))
+        .addParameter('expression', _('Anchor Y (pixels)'))
+        .addParameter('expression', _('Anchor Z (pixels)'))
+        .addParameter('expression', _('Twist axis X'))
+        .addParameter('expression', _('Twist axis Y'))
+        .addParameter('expression', _('Twist axis Z'))
+        .addParameter('expression', _('Normal half cone angle (degrees)'))
+        .addParameter('expression', _('Plane half cone angle (degrees)'))
+        .addParameter('expression', _('Twist min angle (degrees)'))
+        .addParameter('expression', _('Twist max angle (degrees)'))
+        .addParameter('scenevar', _('Variable to store joint ID'))
+        .setFunctionName('addSwingTwistJoint');
+
       // ==================== Joint Enable/Disable & Count ====================
 
       aut
@@ -2320,6 +2352,300 @@ module.exports = {
         .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
         .addParameter('expression', _('Joint ID'))
         .setFunctionName('getSliderJointMaxFriction');
+
+      // ================================================================
+      // ==================== RAGDOLL AUTOMATION SYSTEM ==================
+      // ================================================================
+
+      // ==================== Group Management ====================
+
+      aut
+        .addScopedAction(
+          'CreateRagdollGroup',
+          _('Create ragdoll group'),
+          _('Create a new ragdoll group for batch control of connected bodies and joints.'),
+          _('Create ragdoll group and store ID in _PARAM2_'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('scenevar', _('Variable to store ragdoll ID'))
+        .setFunctionName('createRagdollGroup');
+
+      aut
+        .addScopedAction(
+          'AddBodyToRagdollGroup',
+          _('Add body to ragdoll group'),
+          _('Add this object\'s physics body to a ragdoll group for batch control.'),
+          _('Add _PARAM0_ to ragdoll group _PARAM2_'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Ragdoll group ID'))
+        .setFunctionName('addBodyToRagdollGroup');
+
+      aut
+        .addScopedAction(
+          'AddJointToRagdollGroup',
+          _('Add joint to ragdoll group'),
+          _('Register an existing joint with a ragdoll group for batch control.'),
+          _('Add joint _PARAM3_ to ragdoll group _PARAM2_'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Ragdoll group ID'))
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('addJointToRagdollGroup');
+
+      aut
+        .addScopedAction(
+          'RemoveRagdollGroup',
+          _('Remove ragdoll group'),
+          _('Remove a ragdoll group and all its joints.'),
+          _('Remove ragdoll group _PARAM2_ and all its joints'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Ragdoll group ID'))
+        .setFunctionName('removeRagdollGroup');
+
+      // ==================== Ragdoll State Control ====================
+
+      aut
+        .addScopedAction(
+          'SetRagdollMode',
+          _('Set ragdoll mode'),
+          _('Switch all bodies in a ragdoll between Dynamic (physics) and Kinematic (animation) mode.'),
+          _('Set ragdoll _PARAM2_ mode to _PARAM3_'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Ragdoll group ID'))
+        .addParameter(
+          'stringWithSelector',
+          _('Mode'),
+          '["Dynamic", "Kinematic"]',
+          false
+        )
+        .setFunctionName('setRagdollMode');
+
+      aut
+        .addScopedAction(
+          'SetRagdollState',
+          _('Set ragdoll state'),
+          _('Set a preset ragdoll state: Active (normal physics), Limp (floppy ragdoll), Stiff (muscle tension), Frozen (kinematic).'),
+          _('Set ragdoll _PARAM2_ state to _PARAM3_'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Ragdoll group ID'))
+        .addParameter(
+          'stringWithSelector',
+          _('State'),
+          '["Active", "Limp", "Stiff", "Frozen"]',
+          false
+        )
+        .setFunctionName('setRagdollState');
+
+      // ==================== Ragdoll Batch Controls ====================
+
+      aut
+        .addScopedAction(
+          'SetRagdollDamping',
+          _('Set ragdoll damping'),
+          _('Set linear and angular damping on ALL bodies in a ragdoll group.'),
+          _('Set ragdoll _PARAM2_ damping (linear: _PARAM3_, angular: _PARAM4_)'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Ragdoll group ID'))
+        .addParameter('expression', _('Linear damping'))
+        .addParameter('expression', _('Angular damping'))
+        .setFunctionName('setRagdollDamping');
+
+      aut
+        .addScopedAction(
+          'SetRagdollStiffness',
+          _('Set ragdoll stiffness'),
+          _('Set spring stiffness on ALL joints in a ragdoll group (simulates muscle tension).'),
+          _('Set ragdoll _PARAM2_ stiffness (frequency: _PARAM3_, damping: _PARAM4_)'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Ragdoll group ID'))
+        .addParameter('expression', _('Spring frequency (Hz)'))
+        .addParameter('expression', _('Damping ratio (0..1)'))
+        .setFunctionName('setRagdollStiffness');
+
+      aut
+        .addScopedAction(
+          'SetRagdollFriction',
+          _('Set ragdoll friction'),
+          _('Set friction on ALL joints in a ragdoll group.'),
+          _('Set ragdoll _PARAM2_ friction to _PARAM3_'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Ragdoll group ID'))
+        .addParameter('expression', _('Friction'))
+        .setFunctionName('setRagdollFriction');
+
+      aut
+        .addScopedAction(
+          'ApplyRagdollImpulse',
+          _('Apply ragdoll impulse'),
+          _('Apply an impulse to ALL bodies in a ragdoll group (explosions, hits, knockbacks).'),
+          _('Apply impulse (_PARAM3_, _PARAM4_, _PARAM5_) to ragdoll _PARAM2_'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Ragdoll group ID'))
+        .addParameter('expression', _('Impulse X'))
+        .addParameter('expression', _('Impulse Y'))
+        .addParameter('expression', _('Impulse Z'))
+        .setFunctionName('applyRagdollImpulse');
+
+      aut
+        .addScopedAction(
+          'SetRagdollGravityScale',
+          _('Set ragdoll gravity scale'),
+          _('Set gravity scale on ALL bodies in a ragdoll (0 = zero gravity, 1 = normal, 2 = double gravity).'),
+          _('Set ragdoll _PARAM2_ gravity scale to _PARAM3_'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Ragdoll group ID'))
+        .addParameter('expression', _('Gravity scale (0-2)'))
+        .setFunctionName('setRagdollGravityScale');
+
+      // ==================== Ragdoll Queries ====================
+
+      aut
+        .addExpression(
+          'RagdollBodyCount',
+          _('Ragdoll body count'),
+          _('Return the number of bodies in a ragdoll group.'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Ragdoll group ID'))
+        .setFunctionName('getRagdollBodyCount');
+
+      aut
+        .addExpression(
+          'RagdollJointCount',
+          _('Ragdoll joint count'),
+          _('Return the number of joints in a ragdoll group.'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Ragdoll group ID'))
+        .setFunctionName('getRagdollJointCount');
+
+      // ==================== Joint World Position ====================
+
+      aut
+        .addExpression(
+          'JointWorldX',
+          _('Joint world X position'),
+          _('Return the world X position of a joint (midpoint of connected bodies, in pixels).'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getJointWorldX');
+
+      aut
+        .addExpression(
+          'JointWorldY',
+          _('Joint world Y position'),
+          _('Return the world Y position of a joint (midpoint of connected bodies, in pixels).'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getJointWorldY');
+
+      aut
+        .addExpression(
+          'JointWorldZ',
+          _('Joint world Z position'),
+          _('Return the world Z position of a joint (midpoint of connected bodies, in pixels).'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getJointWorldZ');
+
+      // ==================== Humanoid Ragdoll Template ====================
+
+      aut
+        .addScopedAction(
+          'BuildHumanoidRagdoll',
+          _('Build humanoid ragdoll'),
+          _('Automatically build a complete humanoid ragdoll from 11 body-part objects with proper joint types and weight distribution.'),
+          _('Build humanoid ragdoll from _PARAM2_ body parts, store ID in _PARAM13_'),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('objectPtr', _('Head'))
+        .addParameter('objectPtr', _('Chest'))
+        .addParameter('objectPtr', _('Hips'))
+        .addParameter('objectPtr', _('Upper Arm Left'))
+        .addParameter('objectPtr', _('Lower Arm Left'))
+        .addParameter('objectPtr', _('Upper Arm Right'))
+        .addParameter('objectPtr', _('Lower Arm Right'))
+        .addParameter('objectPtr', _('Thigh Left'))
+        .addParameter('objectPtr', _('Shin Left'))
+        .addParameter('objectPtr', _('Thigh Right'))
+        .addParameter('objectPtr', _('Shin Right'))
+        .addParameter('scenevar', _('Variable to store ragdoll ID'))
+        .setFunctionName('buildHumanoidRagdoll');
     }
     // Collision
     extension

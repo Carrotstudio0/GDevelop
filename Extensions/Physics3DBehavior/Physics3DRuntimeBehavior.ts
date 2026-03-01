@@ -95,6 +95,84 @@ namespace gdjs {
     /** Map of (string)jointId -> (Jolt.Constraint)constraint */
     joints: { [key: string]: Jolt.Constraint } = {};
 
+    // ==================== Ragdoll Group System ====================
+
+    /** Next ragdoll group ID counter */
+    _nextRagdollId: number = 1;
+    /** Map of ragdoll group IDs to group data */
+    _ragdollGroups: {
+      [key: string]: {
+        jointIds: number[];
+        bodyBehaviors: Physics3DRuntimeBehavior[];
+      };
+    } = {};
+
+    /**
+     * Create a new ragdoll group and return its ID.
+     */
+    createRagdollGroup(): number {
+      const id = this._nextRagdollId++;
+      this._ragdollGroups[id.toString(10)] = {
+        jointIds: [],
+        bodyBehaviors: [],
+      };
+      return id;
+    }
+
+    /**
+     * Get a ragdoll group by ID.
+     */
+    getRagdollGroup(
+      ragdollId: number | string
+    ): { jointIds: number[]; bodyBehaviors: Physics3DRuntimeBehavior[] } | null {
+      const key = ragdollId.toString(10);
+      return this._ragdollGroups.hasOwnProperty(key)
+        ? this._ragdollGroups[key]
+        : null;
+    }
+
+    /**
+     * Add a body behavior to a ragdoll group.
+     */
+    addBodyToRagdollGroup(
+      ragdollId: number | string,
+      behavior: Physics3DRuntimeBehavior
+    ): void {
+      const group = this.getRagdollGroup(ragdollId);
+      if (!group) return;
+      if (group.bodyBehaviors.indexOf(behavior) === -1) {
+        group.bodyBehaviors.push(behavior);
+      }
+    }
+
+    /**
+     * Add a joint to a ragdoll group.
+     */
+    addJointToRagdollGroup(
+      ragdollId: number | string,
+      jointId: number
+    ): void {
+      const group = this.getRagdollGroup(ragdollId);
+      if (!group) return;
+      if (group.jointIds.indexOf(jointId) === -1) {
+        group.jointIds.push(jointId);
+      }
+    }
+
+    /**
+     * Remove a ragdoll group and all its joints.
+     */
+    removeRagdollGroup(ragdollId: number | string): void {
+      const key = ragdollId.toString(10);
+      const group = this._ragdollGroups[key];
+      if (!group) return;
+      // Remove all joints in the group
+      for (const jointId of group.jointIds) {
+        this.removeJoint(jointId);
+      }
+      delete this._ragdollGroups[key];
+    }
+
     constructor(instanceContainer: gdjs.RuntimeInstanceContainer, sharedData) {
       this._registeredBehaviors = new Set<Physics3DRuntimeBehavior>();
       this.gravityX = sharedData.gravityX;
@@ -2206,11 +2284,8 @@ namespace gdjs {
       settings.mAutoDetectPoint = true;
       settings.mSpace = Jolt.EConstraintSpace_WorldSpace;
 
-      const constraint = this._sharedData.bodyInterface.CreateConstraint(
-        settings,
-        body.GetID(),
-        otherBody.GetID()
-      );
+      // @ts-ignore - Create exists on TwoBodyConstraintSettings WASM
+      const constraint = settings.Create(body, otherBody);
       Jolt.destroy(settings);
 
       const jointId = this._sharedData.addJoint(constraint);
@@ -2249,11 +2324,8 @@ namespace gdjs {
         anchorZ * worldInvScale
       );
 
-      const constraint = this._sharedData.bodyInterface.CreateConstraint(
-        settings,
-        body.GetID(),
-        otherBody.GetID()
-      );
+      // @ts-ignore - Create exists on TwoBodyConstraintSettings WASM
+      const constraint = settings.Create(body, otherBody);
       Jolt.destroy(settings);
 
       const jointId = this._sharedData.addJoint(constraint);
@@ -2337,11 +2409,8 @@ namespace gdjs {
         normalZ
       );
 
-      const constraint = this._sharedData.bodyInterface.CreateConstraint(
-        settings,
-        body.GetID(),
-        otherBody.GetID()
-      );
+      // @ts-ignore - Create exists on TwoBodyConstraintSettings WASM
+      const constraint = settings.Create(body, otherBody);
       Jolt.destroy(settings);
 
       const jointId = this._sharedData.addJoint(constraint);
@@ -2381,11 +2450,8 @@ namespace gdjs {
       settings.mSliderAxis1 = this._sharedData.getVec3(axisX, axisY, axisZ);
       settings.mSliderAxis2 = this._sharedData.getVec3(axisX, axisY, axisZ);
 
-      const constraint = this._sharedData.bodyInterface.CreateConstraint(
-        settings,
-        body.GetID(),
-        otherBody.GetID()
-      );
+      // @ts-ignore - Create exists on TwoBodyConstraintSettings WASM
+      const constraint = settings.Create(body, otherBody);
       Jolt.destroy(settings);
 
       const jointId = this._sharedData.addJoint(constraint);
@@ -2434,11 +2500,8 @@ namespace gdjs {
         settings.mLimitsSpringSettings.mDamping = springDamping;
       }
 
-      const constraint = this._sharedData.bodyInterface.CreateConstraint(
-        settings,
-        body.GetID(),
-        otherBody.GetID()
-      );
+      // @ts-ignore - Create exists on TwoBodyConstraintSettings WASM
+      const constraint = settings.Create(body, otherBody);
       Jolt.destroy(settings);
 
       const jointId = this._sharedData.addJoint(constraint);
@@ -2505,11 +2568,104 @@ namespace gdjs {
       );
       settings.mHalfConeAngle = gdjs.toRad(halfConeAngle);
 
-      const constraint = this._sharedData.bodyInterface.CreateConstraint(
-        settings,
-        body.GetID(),
-        otherBody.GetID()
+      // @ts-ignore - Create exists on TwoBodyConstraintSettings WASM
+      const constraint = settings.Create(body, otherBody);
+      Jolt.destroy(settings);
+
+      const jointId = this._sharedData.addJoint(constraint);
+      variable.setNumber(jointId);
+    }
+
+    /**
+     * Add a SwingTwist joint between this object and another.
+     * Best for shoulders, hips, and ragdoll joints. Allows independent
+     * control of swing (cone) and twist ranges.
+     */
+    addSwingTwistJoint(
+      otherObject: gdjs.RuntimeObject,
+      anchorX: float,
+      anchorY: float,
+      anchorZ: float,
+      twistAxisX: float,
+      twistAxisY: float,
+      twistAxisZ: float,
+      normalHalfConeAngle: float,
+      planeHalfConeAngle: float,
+      twistMinAngle: float,
+      twistMaxAngle: float,
+      variable: gdjs.Variable
+    ): void {
+      if (this._body === null) {
+        if (!this._createBody()) return;
+      }
+      const body = this._body!;
+      const otherBody = this._getOtherBody(otherObject);
+      if (!otherBody) return;
+
+      const worldInvScale = this._sharedData.worldInvScale;
+      const settings = new Jolt.SwingTwistConstraintSettings();
+      settings.mSpace = Jolt.EConstraintSpace_WorldSpace;
+      settings.mPosition1 = this._sharedData.getRVec3(
+        anchorX * worldInvScale,
+        anchorY * worldInvScale,
+        anchorZ * worldInvScale
       );
+      settings.mPosition2 = this._sharedData.getRVec3(
+        anchorX * worldInvScale,
+        anchorY * worldInvScale,
+        anchorZ * worldInvScale
+      );
+      // Normalize twist axis
+      const axisLen = Math.sqrt(
+        twistAxisX * twistAxisX +
+          twistAxisY * twistAxisY +
+          twistAxisZ * twistAxisZ
+      );
+      if (axisLen > 0) {
+        twistAxisX /= axisLen;
+        twistAxisY /= axisLen;
+        twistAxisZ /= axisLen;
+      } else {
+        twistAxisX = 1;
+      }
+      settings.mTwistAxis1 = this._sharedData.getVec3(
+        twistAxisX,
+        twistAxisY,
+        twistAxisZ
+      );
+      settings.mTwistAxis2 = this._sharedData.getVec3(
+        twistAxisX,
+        twistAxisY,
+        twistAxisZ
+      );
+      // Compute plane axis perpendicular to twist axis
+      let planeX: float, planeY: float, planeZ: float;
+      if (Math.abs(twistAxisX) < 0.9) {
+        planeX = 0;
+        planeY = -twistAxisZ;
+        planeZ = twistAxisY;
+      } else {
+        planeX = twistAxisZ;
+        planeY = 0;
+        planeZ = -twistAxisX;
+      }
+      const planeLen = Math.sqrt(
+        planeX * planeX + planeY * planeY + planeZ * planeZ
+      );
+      if (planeLen > 0) {
+        planeX /= planeLen;
+        planeY /= planeLen;
+        planeZ /= planeLen;
+      }
+      settings.mPlaneAxis1 = this._sharedData.getVec3(planeX, planeY, planeZ);
+      settings.mPlaneAxis2 = this._sharedData.getVec3(planeX, planeY, planeZ);
+      settings.mNormalHalfConeAngle = gdjs.toRad(normalHalfConeAngle);
+      settings.mPlaneHalfConeAngle = gdjs.toRad(planeHalfConeAngle);
+      settings.mTwistMinAngle = gdjs.toRad(twistMinAngle);
+      settings.mTwistMaxAngle = gdjs.toRad(twistMaxAngle);
+
+      // @ts-ignore - Create exists on TwoBodyConstraintSettings WASM
+      const constraint = settings.Create(body, otherBody);
       Jolt.destroy(settings);
 
       const jointId = this._sharedData.addJoint(constraint);
@@ -3025,6 +3181,557 @@ namespace gdjs {
         Jolt.SliderConstraint
       );
       return sliderConstraint.GetMaxFrictionForce();
+    }
+
+    // ================================================================
+    // ==================== RAGDOLL AUTOMATION SYSTEM ==================
+    // ================================================================
+
+    // ==================== Group Management ====================
+
+    /**
+     * Create a new ragdoll group and store the ID in a variable.
+     */
+    createRagdollGroup(variable: gdjs.Variable): void {
+      const id = this._sharedData.createRagdollGroup();
+      variable.setNumber(id);
+    }
+
+    /**
+     * Add this object's body to a ragdoll group.
+     */
+    addBodyToRagdollGroup(ragdollId: integer | string): void {
+      this._sharedData.addBodyToRagdollGroup(ragdollId, this);
+    }
+
+    /**
+     * Add a joint to a ragdoll group.
+     */
+    addJointToRagdollGroup(
+      ragdollId: integer | string,
+      jointId: integer | string
+    ): void {
+      this._sharedData.addJointToRagdollGroup(
+        ragdollId,
+        typeof jointId === 'string' ? parseInt(jointId, 10) : jointId
+      );
+    }
+
+    /**
+     * Remove a ragdoll group and all its joints.
+     */
+    removeRagdollGroup(ragdollId: integer | string): void {
+      this._sharedData.removeRagdollGroup(ragdollId);
+    }
+
+    // ==================== Ragdoll Mode Switching ====================
+
+    /**
+     * Switch all bodies in a ragdoll group between Dynamic and Kinematic.
+     * @param mode "Dynamic" or "Kinematic"
+     */
+    setRagdollMode(ragdollId: integer | string, mode: string): void {
+      const group = this._sharedData.getRagdollGroup(ragdollId);
+      if (!group) return;
+      const motionType =
+        mode === 'Kinematic'
+          ? Jolt.EMotionType_Kinematic
+          : Jolt.EMotionType_Dynamic;
+      for (const behavior of group.bodyBehaviors) {
+        const body = behavior.getBody();
+        if (!body) continue;
+        this._sharedData.bodyInterface.SetMotionType(
+          body.GetID(),
+          motionType,
+          Jolt.EActivation_Activate
+        );
+        behavior.bodyType = mode === 'Kinematic' ? 'Kinematic' : 'Dynamic';
+      }
+    }
+
+    /**
+     * Set preset ragdoll state for realistic simulation.
+     * - "Active": Normal dynamic physics
+     * - "Limp": High damping, no friction (unconscious/dead)
+     * - "Stiff": High spring stiffness, high friction (muscle tension)
+     * - "Frozen": Kinematic mode (animation-driven)
+     */
+    setRagdollState(ragdollId: integer | string, state: string): void {
+      const group = this._sharedData.getRagdollGroup(ragdollId);
+      if (!group) return;
+
+      if (state === 'Frozen') {
+        this.setRagdollMode(ragdollId, 'Kinematic');
+        return;
+      }
+
+      // Ensure dynamic mode for physics states
+      this.setRagdollMode(ragdollId, 'Dynamic');
+
+      if (state === 'Limp') {
+        // High damping, no friction => floppy ragdoll
+        for (const behavior of group.bodyBehaviors) {
+          behavior.setLinearDamping(2.0);
+          behavior.setAngularDamping(2.0);
+        }
+        this._setRagdollJointsFriction(group, 0);
+        this._setRagdollJointsSpring(group, 0, 0);
+      } else if (state === 'Stiff') {
+        // Low damping, high spring, high friction => tense muscles
+        for (const behavior of group.bodyBehaviors) {
+          behavior.setLinearDamping(0.3);
+          behavior.setAngularDamping(0.5);
+        }
+        this._setRagdollJointsFriction(group, 100);
+        this._setRagdollJointsSpring(group, 10, 0.5);
+      } else {
+        // "Active" - moderate values
+        for (const behavior of group.bodyBehaviors) {
+          behavior.setLinearDamping(0.5);
+          behavior.setAngularDamping(0.5);
+        }
+        this._setRagdollJointsFriction(group, 5);
+        this._setRagdollJointsSpring(group, 2, 0.3);
+      }
+    }
+
+    // ==================== Ragdoll Batch Controls ====================
+
+    /**
+     * Set linear and angular damping on ALL bodies in a ragdoll group.
+     */
+    setRagdollDamping(
+      ragdollId: integer | string,
+      linearDamping: float,
+      angularDamping: float
+    ): void {
+      const group = this._sharedData.getRagdollGroup(ragdollId);
+      if (!group) return;
+      for (const behavior of group.bodyBehaviors) {
+        behavior.setLinearDamping(linearDamping);
+        behavior.setAngularDamping(angularDamping);
+      }
+    }
+
+    /**
+     * Set spring stiffness on ALL joints in a ragdoll group.
+     */
+    setRagdollStiffness(
+      ragdollId: integer | string,
+      frequency: float,
+      damping: float
+    ): void {
+      const group = this._sharedData.getRagdollGroup(ragdollId);
+      if (!group) return;
+      this._setRagdollJointsSpring(group, frequency, damping);
+    }
+
+    /**
+     * Set friction on ALL joints in a ragdoll group.
+     */
+    setRagdollFriction(
+      ragdollId: integer | string,
+      friction: float
+    ): void {
+      const group = this._sharedData.getRagdollGroup(ragdollId);
+      if (!group) return;
+      this._setRagdollJointsFriction(group, friction);
+    }
+
+    /** Internal: set spring on all joints in a group */
+    private _setRagdollJointsSpring(
+      group: { jointIds: number[]; bodyBehaviors: Physics3DRuntimeBehavior[] },
+      frequency: float,
+      damping: float
+    ): void {
+      for (const jointId of group.jointIds) {
+        const constraint = this._sharedData.getJoint(jointId);
+        if (!constraint) continue;
+        const subType = constraint.GetSubType();
+        try {
+          if (frequency > 0) {
+            const springSettings = new Jolt.SpringSettings();
+            springSettings.mFrequency = frequency;
+            springSettings.mDamping = damping;
+            if (subType === Jolt.EConstraintSubType_Hinge) {
+              Jolt.castObject(constraint, Jolt.HingeConstraint).SetLimitsSpringSettings(springSettings);
+            } else if (subType === Jolt.EConstraintSubType_Slider) {
+              Jolt.castObject(constraint, Jolt.SliderConstraint).SetLimitsSpringSettings(springSettings);
+            } else if (subType === Jolt.EConstraintSubType_Distance) {
+              Jolt.castObject(constraint, Jolt.DistanceConstraint).SetLimitsSpringSettings(springSettings);
+            }
+            Jolt.destroy(springSettings);
+          }
+        } catch (_e) {
+          // Constraint type doesn't support springs, skip
+        }
+      }
+    }
+
+    /** Internal: set friction on all joints in a group */
+    private _setRagdollJointsFriction(
+      group: { jointIds: number[]; bodyBehaviors: Physics3DRuntimeBehavior[] },
+      friction: float
+    ): void {
+      for (const jointId of group.jointIds) {
+        const constraint = this._sharedData.getJoint(jointId);
+        if (!constraint) continue;
+        try {
+          const subType = constraint.GetSubType();
+          if (subType === Jolt.EConstraintSubType_Hinge) {
+            Jolt.castObject(constraint, Jolt.HingeConstraint).SetMaxFrictionTorque(friction);
+          } else if (subType === Jolt.EConstraintSubType_Slider) {
+            Jolt.castObject(constraint, Jolt.SliderConstraint).SetMaxFrictionForce(friction);
+          } else if (subType === Jolt.EConstraintSubType_SwingTwist) {
+            Jolt.castObject(constraint, Jolt.SwingTwistConstraint).SetMaxFrictionTorque(friction);
+          }
+        } catch (_e) {
+          // Constraint type doesn't support friction, skip
+        }
+      }
+    }
+
+    /**
+     * Apply an impulse to ALL bodies in a ragdoll group (e.g. explosion or hit).
+     */
+    applyRagdollImpulse(
+      ragdollId: integer | string,
+      impulseX: float,
+      impulseY: float,
+      impulseZ: float
+    ): void {
+      const group = this._sharedData.getRagdollGroup(ragdollId);
+      if (!group) return;
+      const worldInvScale = this._sharedData.worldInvScale;
+      for (const behavior of group.bodyBehaviors) {
+        const body = behavior.getBody();
+        if (!body) continue;
+        this._sharedData.bodyInterface.AddImpulse(
+          body.GetID(),
+          this._sharedData.getVec3(
+            impulseX * worldInvScale,
+            impulseY * worldInvScale,
+            impulseZ * worldInvScale
+          )
+        );
+      }
+    }
+
+    /**
+     * Set gravity scale on ALL bodies in a ragdoll group.
+     */
+    setRagdollGravityScale(
+      ragdollId: integer | string,
+      gravityScale: float
+    ): void {
+      const group = this._sharedData.getRagdollGroup(ragdollId);
+      if (!group) return;
+      for (const behavior of group.bodyBehaviors) {
+        const body = behavior.getBody();
+        if (!body) continue;
+        this._sharedData.bodyInterface.SetGravityFactor(
+          body.GetID(),
+          gravityScale
+        );
+      }
+    }
+
+    // ==================== Ragdoll Queries ====================
+
+    /**
+     * Get the number of bodies in a ragdoll group.
+     */
+    getRagdollBodyCount(ragdollId: integer | string): integer {
+      const group = this._sharedData.getRagdollGroup(ragdollId);
+      return group ? group.bodyBehaviors.length : 0;
+    }
+
+    /**
+     * Get the number of joints in a ragdoll group.
+     */
+    getRagdollJointCount(ragdollId: integer | string): integer {
+      const group = this._sharedData.getRagdollGroup(ragdollId);
+      return group ? group.jointIds.length : 0;
+    }
+
+    // ==================== Joint World Position Queries ====================
+
+    /**
+     * Get the world X position of a joint (midpoint of the two connected bodies).
+     */
+    getJointWorldX(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const twoBody = Jolt.castObject(constraint, Jolt.TwoBodyConstraint);
+      const pos1 = twoBody.GetBody1().GetCenterOfMassPosition();
+      const pos2 = twoBody.GetBody2().GetCenterOfMassPosition();
+      return ((pos1.GetX() + pos2.GetX()) / 2) * this._sharedData.worldScale;
+    }
+
+    /**
+     * Get the world Y position of a joint (midpoint of the two connected bodies).
+     */
+    getJointWorldY(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const twoBody = Jolt.castObject(constraint, Jolt.TwoBodyConstraint);
+      const pos1 = twoBody.GetBody1().GetCenterOfMassPosition();
+      const pos2 = twoBody.GetBody2().GetCenterOfMassPosition();
+      return ((pos1.GetY() + pos2.GetY()) / 2) * this._sharedData.worldScale;
+    }
+
+    /**
+     * Get the world Z position of a joint (midpoint of the two connected bodies).
+     */
+    getJointWorldZ(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const twoBody = Jolt.castObject(constraint, Jolt.TwoBodyConstraint);
+      const pos1 = twoBody.GetBody1().GetCenterOfMassPosition();
+      const pos2 = twoBody.GetBody2().GetCenterOfMassPosition();
+      return ((pos1.GetZ() + pos2.GetZ()) / 2) * this._sharedData.worldScale;
+    }
+
+    // ==================== Humanoid Ragdoll Template ====================
+
+    /**
+     * Build a complete humanoid ragdoll from 11 body-part objects.
+     * Automatically creates joints with appropriate types and weight distribution:
+     * - Head -> Chest: Cone joint (neck)
+     * - Chest -> Hips: Fixed joint (torso)
+     * - Chest -> UpperArmL/R: SwingTwist (shoulders)
+     * - UpperArmL/R -> LowerArmL/R: Hinge (elbows)
+     * - Hips -> ThighL/R: SwingTwist (hips)
+     * - ThighL/R -> ShinL/R: Hinge (knees)
+     */
+    buildHumanoidRagdoll(
+      head: gdjs.RuntimeObject,
+      chest: gdjs.RuntimeObject,
+      hips: gdjs.RuntimeObject,
+      upperArmL: gdjs.RuntimeObject,
+      lowerArmL: gdjs.RuntimeObject,
+      upperArmR: gdjs.RuntimeObject,
+      lowerArmR: gdjs.RuntimeObject,
+      thighL: gdjs.RuntimeObject,
+      shinL: gdjs.RuntimeObject,
+      thighR: gdjs.RuntimeObject,
+      shinR: gdjs.RuntimeObject,
+      variable: gdjs.Variable
+    ): void {
+      // Create the ragdoll group
+      const ragdollId = this._sharedData.createRagdollGroup();
+      variable.setNumber(ragdollId);
+
+      // Helper to get behavior from object
+      const getBehavior = (
+        obj: gdjs.RuntimeObject
+      ): Physics3DRuntimeBehavior | null => {
+        if (!obj || !obj.hasBehavior(this.name)) return null;
+        return obj.getBehavior(this.name) as Physics3DRuntimeBehavior | null;
+      };
+
+      // Collect all body behaviors
+      const parts: Array<{
+        obj: gdjs.RuntimeObject;
+        behavior: Physics3DRuntimeBehavior;
+        massRatio: float;
+      }> = [];
+      const partDefs: Array<{
+        obj: gdjs.RuntimeObject;
+        mass: float;
+      }> = [
+        { obj: head, mass: 0.08 },
+        { obj: chest, mass: 0.35 },
+        { obj: hips, mass: 0.15 },
+        { obj: upperArmL, mass: 0.04 },
+        { obj: lowerArmL, mass: 0.03 },
+        { obj: upperArmR, mass: 0.04 },
+        { obj: lowerArmR, mass: 0.03 },
+        { obj: thighL, mass: 0.08 },
+        { obj: shinL, mass: 0.05 },
+        { obj: thighR, mass: 0.08 },
+        { obj: shinR, mass: 0.05 },
+      ];
+
+      for (const def of partDefs) {
+        const behavior = getBehavior(def.obj);
+        if (!behavior) continue;
+        // Ensure body is created
+        if (!behavior.getBody()) behavior._createBody();
+        if (!behavior.getBody()) continue;
+        parts.push({ obj: def.obj, behavior, massRatio: def.mass });
+        this._sharedData.addBodyToRagdollGroup(ragdollId, behavior);
+      }
+
+      // Helper to create a joint between two body parts
+      const createHingeJoint = (
+        behaviorA: Physics3DRuntimeBehavior,
+        behaviorB: Physics3DRuntimeBehavior,
+        minAngle: float,
+        maxAngle: float
+      ): number => {
+        const bodyA = behaviorA.getBody()!;
+        const bodyB = behaviorB.getBody()!;
+        const settings = new Jolt.HingeConstraintSettings();
+        settings.mSpace = Jolt.EConstraintSpace_WorldSpace;
+        // Use midpoint between the two bodies
+        const posA = bodyA.GetCenterOfMassPosition();
+        const posB = bodyB.GetCenterOfMassPosition();
+        const midX = (posA.GetX() + posB.GetX()) / 2;
+        const midY = (posA.GetY() + posB.GetY()) / 2;
+        const midZ = (posA.GetZ() + posB.GetZ()) / 2;
+        settings.mPoint1 = this._sharedData.getRVec3(midX, midY, midZ);
+        settings.mPoint2 = this._sharedData.getRVec3(midX, midY, midZ);
+        // Axis perpendicular to the connection (Y axis for elbows/knees)
+        settings.mHingeAxis1 = this._sharedData.getVec3(0, 1, 0);
+        settings.mHingeAxis2 = this._sharedData.getVec3(0, 1, 0);
+        settings.mNormalAxis1 = this._sharedData.getVec3(1, 0, 0);
+        settings.mNormalAxis2 = this._sharedData.getVec3(1, 0, 0);
+        settings.mLimitsMin = gdjs.toRad(minAngle);
+        settings.mLimitsMax = gdjs.toRad(maxAngle);
+        // @ts-ignore - Create exists on TwoBodyConstraintSettings WASM
+        const constraint = settings.Create(bodyA, bodyB);
+        Jolt.destroy(settings);
+        return this._sharedData.addJoint(constraint);
+      };
+
+      const createSwingTwistJoint = (
+        behaviorA: Physics3DRuntimeBehavior,
+        behaviorB: Physics3DRuntimeBehavior,
+        halfConeAngle: float,
+        twistMin: float,
+        twistMax: float
+      ): number => {
+        const bodyA = behaviorA.getBody()!;
+        const bodyB = behaviorB.getBody()!;
+        const settings = new Jolt.SwingTwistConstraintSettings();
+        settings.mSpace = Jolt.EConstraintSpace_WorldSpace;
+        const posA = bodyA.GetCenterOfMassPosition();
+        const posB = bodyB.GetCenterOfMassPosition();
+        const midX = (posA.GetX() + posB.GetX()) / 2;
+        const midY = (posA.GetY() + posB.GetY()) / 2;
+        const midZ = (posA.GetZ() + posB.GetZ()) / 2;
+        settings.mPosition1 = this._sharedData.getRVec3(midX, midY, midZ);
+        settings.mPosition2 = this._sharedData.getRVec3(midX, midY, midZ);
+        // Twist axis along the limb (X axis)
+        settings.mTwistAxis1 = this._sharedData.getVec3(1, 0, 0);
+        settings.mTwistAxis2 = this._sharedData.getVec3(1, 0, 0);
+        settings.mPlaneAxis1 = this._sharedData.getVec3(0, 1, 0);
+        settings.mPlaneAxis2 = this._sharedData.getVec3(0, 1, 0);
+        settings.mNormalHalfConeAngle = gdjs.toRad(halfConeAngle);
+        settings.mPlaneHalfConeAngle = gdjs.toRad(halfConeAngle);
+        settings.mTwistMinAngle = gdjs.toRad(twistMin);
+        settings.mTwistMaxAngle = gdjs.toRad(twistMax);
+        // @ts-ignore - Create exists on TwoBodyConstraintSettings WASM
+        const constraint = settings.Create(bodyA, bodyB);
+        Jolt.destroy(settings);
+        return this._sharedData.addJoint(constraint);
+      };
+
+      const createConeJoint = (
+        behaviorA: Physics3DRuntimeBehavior,
+        behaviorB: Physics3DRuntimeBehavior,
+        halfAngle: float
+      ): number => {
+        const bodyA = behaviorA.getBody()!;
+        const bodyB = behaviorB.getBody()!;
+        const settings = new Jolt.ConeConstraintSettings();
+        settings.mSpace = Jolt.EConstraintSpace_WorldSpace;
+        const posA = bodyA.GetCenterOfMassPosition();
+        const posB = bodyB.GetCenterOfMassPosition();
+        const midX = (posA.GetX() + posB.GetX()) / 2;
+        const midY = (posA.GetY() + posB.GetY()) / 2;
+        const midZ = (posA.GetZ() + posB.GetZ()) / 2;
+        settings.mPoint1 = this._sharedData.getRVec3(midX, midY, midZ);
+        settings.mPoint2 = this._sharedData.getRVec3(midX, midY, midZ);
+        settings.mTwistAxis1 = this._sharedData.getVec3(0, 0, 1);
+        settings.mTwistAxis2 = this._sharedData.getVec3(0, 0, 1);
+        settings.mHalfConeAngle = gdjs.toRad(halfAngle);
+        // @ts-ignore - Create exists on TwoBodyConstraintSettings WASM
+        const constraint = settings.Create(bodyA, bodyB);
+        Jolt.destroy(settings);
+        return this._sharedData.addJoint(constraint);
+      };
+
+      const createFixedJoint = (
+        behaviorA: Physics3DRuntimeBehavior,
+        behaviorB: Physics3DRuntimeBehavior
+      ): number => {
+        const bodyA = behaviorA.getBody()!;
+        const bodyB = behaviorB.getBody()!;
+        const settings = new Jolt.FixedConstraintSettings();
+        settings.mAutoDetectPoint = true;
+        settings.mSpace = Jolt.EConstraintSpace_WorldSpace;
+        // @ts-ignore - Create exists on TwoBodyConstraintSettings WASM
+        const constraint = settings.Create(bodyA, bodyB);
+        Jolt.destroy(settings);
+        return this._sharedData.addJoint(constraint);
+      };
+
+      // Get behaviors
+      const headB = getBehavior(head);
+      const chestB = getBehavior(chest);
+      const hipsB = getBehavior(hips);
+      const upperArmLB = getBehavior(upperArmL);
+      const lowerArmLB = getBehavior(lowerArmL);
+      const upperArmRB = getBehavior(upperArmR);
+      const lowerArmRB = getBehavior(lowerArmR);
+      const thighLB = getBehavior(thighL);
+      const shinLB = getBehavior(shinL);
+      const thighRB = getBehavior(thighR);
+      const shinRB = getBehavior(shinR);
+
+      // Create all joints and add them to the ragdoll group
+      if (headB && chestB && headB.getBody() && chestB.getBody()) {
+        // Neck: Cone joint with limited movement
+        const jId = createConeJoint(headB, chestB, 30);
+        this._sharedData.addJointToRagdollGroup(ragdollId, jId);
+      }
+      if (chestB && hipsB && chestB.getBody() && hipsB.getBody()) {
+        // Torso: Fixed joint
+        const jId = createFixedJoint(chestB, hipsB);
+        this._sharedData.addJointToRagdollGroup(ragdollId, jId);
+      }
+      if (chestB && upperArmLB && chestB.getBody() && upperArmLB.getBody()) {
+        // Left shoulder: SwingTwist
+        const jId = createSwingTwistJoint(chestB, upperArmLB, 60, -45, 45);
+        this._sharedData.addJointToRagdollGroup(ragdollId, jId);
+      }
+      if (upperArmLB && lowerArmLB && upperArmLB.getBody() && lowerArmLB.getBody()) {
+        // Left elbow: Hinge
+        const jId = createHingeJoint(upperArmLB, lowerArmLB, 0, 150);
+        this._sharedData.addJointToRagdollGroup(ragdollId, jId);
+      }
+      if (chestB && upperArmRB && chestB.getBody() && upperArmRB.getBody()) {
+        // Right shoulder: SwingTwist
+        const jId = createSwingTwistJoint(chestB, upperArmRB, 60, -45, 45);
+        this._sharedData.addJointToRagdollGroup(ragdollId, jId);
+      }
+      if (upperArmRB && lowerArmRB && upperArmRB.getBody() && lowerArmRB.getBody()) {
+        // Right elbow: Hinge
+        const jId = createHingeJoint(upperArmRB, lowerArmRB, 0, 150);
+        this._sharedData.addJointToRagdollGroup(ragdollId, jId);
+      }
+      if (hipsB && thighLB && hipsB.getBody() && thighLB.getBody()) {
+        // Left hip: SwingTwist
+        const jId = createSwingTwistJoint(hipsB, thighLB, 45, -20, 20);
+        this._sharedData.addJointToRagdollGroup(ragdollId, jId);
+      }
+      if (thighLB && shinLB && thighLB.getBody() && shinLB.getBody()) {
+        // Left knee: Hinge
+        const jId = createHingeJoint(thighLB, shinLB, 0, 150);
+        this._sharedData.addJointToRagdollGroup(ragdollId, jId);
+      }
+      if (hipsB && thighRB && hipsB.getBody() && thighRB.getBody()) {
+        // Right hip: SwingTwist
+        const jId = createSwingTwistJoint(hipsB, thighRB, 45, -20, 20);
+        this._sharedData.addJointToRagdollGroup(ragdollId, jId);
+      }
+      if (thighRB && shinRB && thighRB.getBody() && shinRB.getBody()) {
+        // Right knee: Hinge
+        const jId = createHingeJoint(thighRB, shinRB, 0, 150);
+        this._sharedData.addJointToRagdollGroup(ragdollId, jId);
+      }
     }
   }
 
