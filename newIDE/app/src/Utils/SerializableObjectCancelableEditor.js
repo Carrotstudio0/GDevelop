@@ -54,7 +54,10 @@ export const useSerializableObjectCancelableEditor = ({
         serializedElementRef.current = null;
       }
 
-      if (resetThenClearPersistentUuid)
+      if (
+        resetThenClearPersistentUuid &&
+        typeof serializableObject.resetPersistentUuid === 'function'
+      )
         serializableObject.resetPersistentUuid();
 
       serializedElementRef.current = new gd.SerializerElement();
@@ -125,7 +128,10 @@ export const useSerializableObjectCancelableEditor = ({
         );
       }
 
-      if (resetThenClearPersistentUuid)
+      if (
+        resetThenClearPersistentUuid &&
+        typeof serializableObject.clearPersistentUuid === 'function'
+      )
         serializableObject.clearPersistentUuid();
 
       onCancel();
@@ -200,7 +206,10 @@ export const useSerializableObjectsCancelableEditor = ({
           serializedElements.delete(id);
         }
       }
-      if (resetThenClearPersistentUuid) {
+      if (
+        resetThenClearPersistentUuid &&
+        typeof serializableObject.resetPersistentUuid === 'function'
+      ) {
         serializableObject.resetPersistentUuid();
       }
       const serializedElement = new gd.SerializerElement();
@@ -278,7 +287,10 @@ export const useSerializableObjectsCancelableEditor = ({
           serializableObject.unserializeFrom(serializedElement);
         }
 
-        if (resetThenClearPersistentUuid) {
+        if (
+          resetThenClearPersistentUuid &&
+          typeof serializableObject.clearPersistentUuid === 'function'
+        ) {
           serializableObject.clearPersistentUuid();
         }
       }

@@ -114,7 +114,9 @@ const EditedObjectGroupEditorDialog = ({
         );
       }
     }
-    groupVariablesContainer.clearPersistentUuid();
+    if (typeof groupVariablesContainer.clearPersistentUuid === 'function') {
+      groupVariablesContainer.clearPersistentUuid();
+    }
   };
 
   const removeObject = React.useCallback(

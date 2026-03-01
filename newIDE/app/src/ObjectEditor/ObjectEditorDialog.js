@@ -193,7 +193,9 @@ const InnerDialog = (props: InnerDialogProps) => {
         changeset
       );
     }
-    object.clearPersistentUuid();
+    if (typeof object.clearPersistentUuid === 'function') {
+      object.clearPersistentUuid();
+    }
 
     // Do the renaming *after* applying changes, as "withSerializableObject"
     // HOC will unserialize the object to apply modifications, which will

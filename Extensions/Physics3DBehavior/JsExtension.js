@@ -270,6 +270,22 @@ module.exports = {
           return true;
         }
 
+        if (propertyName === 'ragdollRole') {
+          if (!behaviorContent.hasChild('ragdollRole')) {
+            behaviorContent.addChild('ragdollRole').setStringValue('None');
+          }
+          behaviorContent.getChild('ragdollRole').setStringValue(newValue);
+          return true;
+        }
+
+        if (propertyName === 'ragdollGroupTag') {
+          if (!behaviorContent.hasChild('ragdollGroupTag')) {
+            behaviorContent.addChild('ragdollGroupTag').setStringValue('');
+          }
+          behaviorContent.getChild('ragdollGroupTag').setStringValue(newValue);
+          return true;
+        }
+
         return false;
       };
       behavior.getProperties = function (behaviorContent) {
@@ -630,6 +646,53 @@ module.exports = {
           .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
           .setHidden(true); // Hidden as required to be changed in the full editor.
 
+        // Ragdoll properties
+        if (!behaviorContent.hasChild('ragdollRole')) {
+          behaviorContent.addChild('ragdollRole').setStringValue('None');
+        }
+        behaviorProperties
+          .getOrCreate('ragdollRole')
+          .setValue(behaviorContent.getChild('ragdollRole').getStringValue())
+          .setType('Choice')
+          .setLabel(_('Ragdoll Body Part'))
+          .setDescription(
+            _(
+              'Assign a ragdoll role to this object. Objects with the same Group Tag will auto-connect using appropriate joint types.'
+            )
+          )
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .addChoice('None', _('None'))
+          .addChoice('Head', _('Head'))
+          .addChoice('Chest', _('Chest'))
+          .addChoice('Hips', _('Hips'))
+          .addChoice('UpperArmL', _('Upper Arm Left'))
+          .addChoice('LowerArmL', _('Lower Arm Left'))
+          .addChoice('UpperArmR', _('Upper Arm Right'))
+          .addChoice('LowerArmR', _('Lower Arm Right'))
+          .addChoice('ThighL', _('Thigh Left'))
+          .addChoice('ShinL', _('Shin Left'))
+          .addChoice('ThighR', _('Thigh Right'))
+          .addChoice('ShinR', _('Shin Right'))
+          .setGroup(_('Ragdoll'));
+
+        if (!behaviorContent.hasChild('ragdollGroupTag')) {
+          behaviorContent.addChild('ragdollGroupTag').setStringValue('');
+        }
+        behaviorProperties
+          .getOrCreate('ragdollGroupTag')
+          .setValue(
+            behaviorContent.getChild('ragdollGroupTag').getStringValue()
+          )
+          .setType('String')
+          .setLabel(_('Ragdoll Group Tag'))
+          .setDescription(
+            _(
+              'A shared tag that groups body parts together. Objects with the same tag will be auto-connected into a ragdoll.'
+            )
+          )
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Ragdoll'));
+
         return behaviorProperties;
       };
 
@@ -659,6 +722,8 @@ module.exports = {
         behaviorContent.addChild('gravityScale').setDoubleValue(1);
         behaviorContent.addChild('layers').setIntValue((1 << 4) | (1 << 0));
         behaviorContent.addChild('masks').setIntValue((1 << 4) | (1 << 0));
+        behaviorContent.addChild('ragdollRole').setStringValue('None');
+        behaviorContent.addChild('ragdollGroupTag').setStringValue('');
       };
 
       const sharedData = new gd.BehaviorSharedDataJsImplementation();

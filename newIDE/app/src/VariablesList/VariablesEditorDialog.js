@@ -182,7 +182,9 @@ const VariablesEditorDialog = ({
             );
           }
         }
-        variablesContainer.clearPersistentUuid();
+        if (typeof variablesContainer.clearPersistentUuid === 'function') {
+          variablesContainer.clearPersistentUuid();
+        }
       }
       const tab = tabs.find(({ id }) => id === currentTab);
       if (tab) {

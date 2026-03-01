@@ -112,7 +112,9 @@ const ObjectGroupVariablesDialog = ({
         );
       }
     }
-    groupVariablesContainer.clearPersistentUuid();
+    if (typeof groupVariablesContainer.clearPersistentUuid === 'function') {
+      groupVariablesContainer.clearPersistentUuid();
+    }
   };
 
   const lastSelectedVariableNodeId = React.useRef<string | null>(null);

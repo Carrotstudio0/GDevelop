@@ -2252,16 +2252,35 @@ namespace gdjs {
     // ==================== Joint Methods ====================
 
     /**
-     * Get the other physics behavior from a picked object.
+     * Get the other object's physics body, creating it if needed.
+     * @returns The Jolt.Body of the other object, or null if unavailable.
      */
     private _getOtherBody(
       otherObject: gdjs.RuntimeObject
     ): Jolt.Body | null {
-      if (!otherObject || !otherObject.hasBehavior(this.name)) return null;
+      if (!otherObject) {
+        console.warn('[Physics3D] Joint creation failed: other object is null');
+        return null;
+      }
+
+      if (!otherObject.hasBehavior(this.name)) {
+        console.warn(
+          `[Physics3D] Joint creation failed: object "${otherObject.getName()}" has no Physics3D behavior "${this.name}"`
+        );
+        return null;
+      }
+
       const otherBehavior = otherObject.getBehavior(
         this.name
       ) as Physics3DRuntimeBehavior | null;
       if (!otherBehavior) return null;
+
+      // Force-create the body if it doesn't exist yet
+      // (physics body is lazy-initialized on first physics step)
+      if (otherBehavior.getBody() === null) {
+        (otherBehavior as any)._createBody();
+      }
+
       return otherBehavior.getBody();
     }
 
@@ -3582,9 +3601,9 @@ namespace gdjs {
         const midZ = (posA.GetZ() + posB.GetZ()) / 2;
         settings.mPoint1 = this._sharedData.getRVec3(midX, midY, midZ);
         settings.mPoint2 = this._sharedData.getRVec3(midX, midY, midZ);
-        // Axis perpendicular to the connection (Y axis for elbows/knees)
-        settings.mHingeAxis1 = this._sharedData.getVec3(0, 1, 0);
-        settings.mHingeAxis2 = this._sharedData.getVec3(0, 1, 0);
+        // Z axis for elbows/knees (bending forward/back)
+        settings.mHingeAxis1 = this._sharedData.getVec3(0, 0, 1);
+        settings.mHingeAxis2 = this._sharedData.getVec3(0, 0, 1);
         settings.mNormalAxis1 = this._sharedData.getVec3(1, 0, 0);
         settings.mNormalAxis2 = this._sharedData.getVec3(1, 0, 0);
         settings.mLimitsMin = gdjs.toRad(minAngle);
@@ -3598,7 +3617,8 @@ namespace gdjs {
       const createSwingTwistJoint = (
         behaviorA: Physics3DRuntimeBehavior,
         behaviorB: Physics3DRuntimeBehavior,
-        halfConeAngle: float,
+        normalHalfConeAngle: float,
+        planeHalfConeAngle: float,
         twistMin: float,
         twistMax: float
       ): number => {
@@ -3613,13 +3633,13 @@ namespace gdjs {
         const midZ = (posA.GetZ() + posB.GetZ()) / 2;
         settings.mPosition1 = this._sharedData.getRVec3(midX, midY, midZ);
         settings.mPosition2 = this._sharedData.getRVec3(midX, midY, midZ);
-        // Twist axis along the limb (X axis)
-        settings.mTwistAxis1 = this._sharedData.getVec3(1, 0, 0);
-        settings.mTwistAxis2 = this._sharedData.getVec3(1, 0, 0);
-        settings.mPlaneAxis1 = this._sharedData.getVec3(0, 1, 0);
-        settings.mPlaneAxis2 = this._sharedData.getVec3(0, 1, 0);
-        settings.mNormalHalfConeAngle = gdjs.toRad(halfConeAngle);
-        settings.mPlaneHalfConeAngle = gdjs.toRad(halfConeAngle);
+        // Twist axis pointing downward along the limb
+        settings.mTwistAxis1 = this._sharedData.getVec3(0, -1, 0);
+        settings.mTwistAxis2 = this._sharedData.getVec3(0, -1, 0);
+        settings.mPlaneAxis1 = this._sharedData.getVec3(1, 0, 0);
+        settings.mPlaneAxis2 = this._sharedData.getVec3(1, 0, 0);
+        settings.mNormalHalfConeAngle = gdjs.toRad(normalHalfConeAngle);
+        settings.mPlaneHalfConeAngle = gdjs.toRad(planeHalfConeAngle);
         settings.mTwistMinAngle = gdjs.toRad(twistMin);
         settings.mTwistMaxAngle = gdjs.toRad(twistMax);
         // @ts-ignore - Create exists on TwoBodyConstraintSettings WASM
@@ -3644,8 +3664,8 @@ namespace gdjs {
         const midZ = (posA.GetZ() + posB.GetZ()) / 2;
         settings.mPoint1 = this._sharedData.getRVec3(midX, midY, midZ);
         settings.mPoint2 = this._sharedData.getRVec3(midX, midY, midZ);
-        settings.mTwistAxis1 = this._sharedData.getVec3(0, 0, 1);
-        settings.mTwistAxis2 = this._sharedData.getVec3(0, 0, 1);
+        settings.mTwistAxis1 = this._sharedData.getVec3(0, 1, 0);
+        settings.mTwistAxis2 = this._sharedData.getVec3(0, 1, 0);
         settings.mHalfConeAngle = gdjs.toRad(halfAngle);
         // @ts-ignore - Create exists on TwoBodyConstraintSettings WASM
         const constraint = settings.Create(bodyA, bodyB);
@@ -3694,7 +3714,7 @@ namespace gdjs {
       }
       if (chestB && upperArmLB && chestB.getBody() && upperArmLB.getBody()) {
         // Left shoulder: SwingTwist
-        const jId = createSwingTwistJoint(chestB, upperArmLB, 60, -45, 45);
+        const jId = createSwingTwistJoint(chestB, upperArmLB, 60, 45, -45, 45);
         this._sharedData.addJointToRagdollGroup(ragdollId, jId);
       }
       if (upperArmLB && lowerArmLB && upperArmLB.getBody() && lowerArmLB.getBody()) {
@@ -3704,7 +3724,7 @@ namespace gdjs {
       }
       if (chestB && upperArmRB && chestB.getBody() && upperArmRB.getBody()) {
         // Right shoulder: SwingTwist
-        const jId = createSwingTwistJoint(chestB, upperArmRB, 60, -45, 45);
+        const jId = createSwingTwistJoint(chestB, upperArmRB, 60, 45, -45, 45);
         this._sharedData.addJointToRagdollGroup(ragdollId, jId);
       }
       if (upperArmRB && lowerArmRB && upperArmRB.getBody() && lowerArmRB.getBody()) {
@@ -3714,7 +3734,7 @@ namespace gdjs {
       }
       if (hipsB && thighLB && hipsB.getBody() && thighLB.getBody()) {
         // Left hip: SwingTwist
-        const jId = createSwingTwistJoint(hipsB, thighLB, 45, -20, 20);
+        const jId = createSwingTwistJoint(hipsB, thighLB, 45, 30, -20, 20);
         this._sharedData.addJointToRagdollGroup(ragdollId, jId);
       }
       if (thighLB && shinLB && thighLB.getBody() && shinLB.getBody()) {
@@ -3724,7 +3744,7 @@ namespace gdjs {
       }
       if (hipsB && thighRB && hipsB.getBody() && thighRB.getBody()) {
         // Right hip: SwingTwist
-        const jId = createSwingTwistJoint(hipsB, thighRB, 45, -20, 20);
+        const jId = createSwingTwistJoint(hipsB, thighRB, 45, 30, -20, 20);
         this._sharedData.addJointToRagdollGroup(ragdollId, jId);
       }
       if (thighRB && shinRB && thighRB.getBody() && shinRB.getBody()) {
@@ -3732,6 +3752,37 @@ namespace gdjs {
         const jId = createHingeJoint(thighRB, shinRB, 0, 150);
         this._sharedData.addJointToRagdollGroup(ragdollId, jId);
       }
+
+      // ===== Collision filtering: prevent adjacent parts from colliding =====
+      const allBehaviors = [
+        headB, chestB, hipsB,
+        upperArmLB, lowerArmLB, upperArmRB, lowerArmRB,
+        thighLB, shinLB, thighRB, shinRB,
+      ];
+      const groupFilter = new Jolt.GroupFilterTable(11);
+      // Disable collisions between adjacent body parts
+      groupFilter.DisableCollision(0, 1);  // head <-> chest
+      groupFilter.DisableCollision(1, 2);  // chest <-> hips
+      groupFilter.DisableCollision(1, 3);  // chest <-> upperArmL
+      groupFilter.DisableCollision(3, 4);  // upperArmL <-> lowerArmL
+      groupFilter.DisableCollision(1, 5);  // chest <-> upperArmR
+      groupFilter.DisableCollision(5, 6);  // upperArmR <-> lowerArmR
+      groupFilter.DisableCollision(2, 7);  // hips <-> thighL
+      groupFilter.DisableCollision(7, 8);  // thighL <-> shinL
+      groupFilter.DisableCollision(2, 9);  // hips <-> thighR
+      groupFilter.DisableCollision(9, 10); // thighR <-> shinR
+      for (let i = 0; i < allBehaviors.length; i++) {
+        const beh = allBehaviors[i];
+        if (!beh || !beh.getBody()) continue;
+        const body = beh.getBody()!;
+        const collisionGroup = body.GetCollisionGroup();
+        collisionGroup.SetGroupFilter(groupFilter);
+        collisionGroup.SetGroupID(ragdollId);
+        collisionGroup.SetSubGroupID(i);
+      }
+
+      // ===== Start in "Frozen" state (kinematic) =====
+      this.setRagdollState(ragdollId, 'Frozen');
     }
   }
 
