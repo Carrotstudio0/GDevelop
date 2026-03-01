@@ -1959,6 +1959,367 @@ module.exports = {
         .addParameter('expression', _('Min distance (pixels)'))
         .addParameter('expression', _('Max distance (pixels)'))
         .setFunctionName('setDistanceJointDistance');
+
+      // ==================== Advanced Joint Customization ====================
+
+      // Hinge Joint Spring
+      aut
+        .addScopedAction(
+          'SetHingeJointSpring',
+          _('Set hinge joint spring'),
+          _('Set spring settings on a hinge joint limits (frequency and damping).'),
+          _('Set hinge joint _PARAM2_ spring (frequency: _PARAM3_, damping: _PARAM4_)'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Spring frequency (Hz, 0 = disable)'))
+        .addParameter('expression', _('Damping ratio (0..1)'))
+        .setFunctionName('setHingeJointSpring');
+
+      // Hinge Joint Max Friction
+      aut
+        .addScopedAction(
+          'SetHingeJointMaxFriction',
+          _('Set hinge joint friction'),
+          _('Set the maximum friction torque of a hinge joint.'),
+          _('Set hinge joint _PARAM2_ max friction torque to _PARAM3_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Max friction torque'))
+        .setFunctionName('setHingeJointMaxFriction');
+
+      // Hinge Joint Has Limits
+      aut
+        .addScopedCondition(
+          'HasHingeJointLimits',
+          _('Hinge joint has limits'),
+          _('Check if a hinge joint has angle limits enabled.'),
+          _('Hinge joint _PARAM2_ has limits'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('hasHingeJointLimits');
+
+      // Hinge Joint Min/Max Limit Expressions
+      aut
+        .addExpression(
+          'HingeJointMinLimit',
+          _('Hinge joint min limit'),
+          _('Return the minimum angle limit of a hinge joint (in degrees).'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getHingeJointMinLimit');
+
+      aut
+        .addExpression(
+          'HingeJointMaxLimit',
+          _('Hinge joint max limit'),
+          _('Return the maximum angle limit of a hinge joint (in degrees).'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getHingeJointMaxLimit');
+
+      // Slider Joint Spring
+      aut
+        .addScopedAction(
+          'SetSliderJointSpring',
+          _('Set slider joint spring'),
+          _('Set spring settings on a slider joint limits (frequency and damping).'),
+          _('Set slider joint _PARAM2_ spring (frequency: _PARAM3_, damping: _PARAM4_)'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Spring frequency (Hz, 0 = disable)'))
+        .addParameter('expression', _('Damping ratio (0..1)'))
+        .setFunctionName('setSliderJointSpring');
+
+      // Slider Joint Max Friction
+      aut
+        .addScopedAction(
+          'SetSliderJointMaxFriction',
+          _('Set slider joint friction'),
+          _('Set the maximum friction force of a slider joint.'),
+          _('Set slider joint _PARAM2_ max friction force to _PARAM3_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Max friction force'))
+        .setFunctionName('setSliderJointMaxFriction');
+
+      // Slider Joint Has Limits
+      aut
+        .addScopedCondition(
+          'HasSliderJointLimits',
+          _('Slider joint has limits'),
+          _('Check if a slider joint has position limits enabled.'),
+          _('Slider joint _PARAM2_ has limits'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('hasSliderJointLimits');
+
+      // Slider Joint Min/Max Limit Expressions
+      aut
+        .addExpression(
+          'SliderJointMinLimit',
+          _('Slider joint min limit'),
+          _('Return the minimum position limit of a slider joint (in pixels).'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getSliderJointMinLimit');
+
+      aut
+        .addExpression(
+          'SliderJointMaxLimit',
+          _('Slider joint max limit'),
+          _('Return the maximum position limit of a slider joint (in pixels).'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getSliderJointMaxLimit');
+
+      // Distance Joint Spring
+      aut
+        .addScopedAction(
+          'SetDistanceJointSpring',
+          _('Set distance joint spring'),
+          _('Set spring settings on a distance joint (frequency and damping).'),
+          _('Set distance joint _PARAM2_ spring (frequency: _PARAM3_, damping: _PARAM4_)'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Spring frequency (Hz, 0 = disable)'))
+        .addParameter('expression', _('Damping ratio (0..1)'))
+        .setFunctionName('setDistanceJointSpring');
+
+      // Distance Joint Min/Max Distance Expressions
+      aut
+        .addExpression(
+          'DistanceJointMinDistance',
+          _('Distance joint min distance'),
+          _('Return the current minimum distance of a distance joint (in pixels).'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getDistanceJointMinDistance');
+
+      aut
+        .addExpression(
+          'DistanceJointMaxDistance',
+          _('Distance joint max distance'),
+          _('Return the current maximum distance of a distance joint (in pixels).'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getDistanceJointMaxDistance');
+
+      // Cone Joint Half Angle
+      aut
+        .addScopedAction(
+          'SetConeJointHalfAngle',
+          _('Set cone joint angle'),
+          _('Update the half cone angle of a cone joint at runtime.'),
+          _('Set cone joint _PARAM2_ half angle to _PARAM3_°'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Half cone angle (degrees)'))
+        .setFunctionName('setConeJointHalfAngle');
+
+      // ==================== Joint Enable/Disable & Count ====================
+
+      aut
+        .addScopedAction(
+          'EnableJoint',
+          _('Enable joint'),
+          _('Enable a previously disabled joint.'),
+          _('Enable joint _PARAM2_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('enableJoint');
+
+      aut
+        .addScopedAction(
+          'DisableJoint',
+          _('Disable joint'),
+          _('Temporarily disable a joint without removing it.'),
+          _('Disable joint _PARAM2_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('disableJoint');
+
+      aut
+        .addScopedCondition(
+          'IsJointEnabled',
+          _('Joint is enabled'),
+          _('Check if a joint is currently enabled.'),
+          _('Joint _PARAM2_ is enabled'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('isJointEnabled');
+
+      aut
+        .addExpression(
+          'JointCount',
+          _('Joint count'),
+          _('Return the total number of active joints.'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('getJointCount');
+
+      // ==================== Hinge Motor Query Expressions ====================
+
+      aut
+        .addExpression(
+          'HingeJointMotorSpeed',
+          _('Hinge joint motor speed'),
+          _('Return the target angular velocity of a hinge joint motor (degrees/second).'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getHingeJointMotorSpeed');
+
+      aut
+        .addExpression(
+          'HingeJointMotorTarget',
+          _('Hinge joint motor target'),
+          _('Return the target angle of a hinge joint motor (degrees).'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getHingeJointMotorTarget');
+
+      aut
+        .addExpression(
+          'HingeJointMaxFriction',
+          _('Hinge joint max friction'),
+          _('Return the maximum friction torque of a hinge joint.'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getHingeJointMaxFriction');
+
+      // ==================== Slider Motor Query Expressions ====================
+
+      aut
+        .addExpression(
+          'SliderJointMotorSpeed',
+          _('Slider joint motor speed'),
+          _('Return the target velocity of a slider joint motor (pixels/second).'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getSliderJointMotorSpeed');
+
+      aut
+        .addExpression(
+          'SliderJointMotorTarget',
+          _('Slider joint motor target'),
+          _('Return the target position of a slider joint motor (pixels).'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getSliderJointMotorTarget');
+
+      aut
+        .addExpression(
+          'SliderJointMaxFriction',
+          _('Slider joint max friction'),
+          _('Return the maximum friction force of a slider joint.'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getSliderJointMaxFriction');
     }
     // Collision
     extension

@@ -2691,6 +2691,341 @@ namespace gdjs {
         maxDistance * this._sharedData.worldInvScale
       );
     }
+
+    // ==================== Advanced Joint Customization ====================
+
+    /**
+     * Set spring settings on hinge joint limits.
+     */
+    setHingeJointSpring(
+      jointId: integer | string,
+      frequency: float,
+      damping: float
+    ): void {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return;
+      const hingeConstraint = Jolt.castObject(
+        constraint,
+        Jolt.HingeConstraint
+      );
+      const springSettings = new Jolt.SpringSettings();
+      springSettings.mFrequency = frequency;
+      springSettings.mDamping = damping;
+      hingeConstraint.SetLimitsSpringSettings(springSettings);
+      Jolt.destroy(springSettings);
+    }
+
+    /**
+     * Set max friction torque on a hinge joint.
+     */
+    setHingeJointMaxFriction(
+      jointId: integer | string,
+      maxFriction: float
+    ): void {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return;
+      const hingeConstraint = Jolt.castObject(
+        constraint,
+        Jolt.HingeConstraint
+      );
+      hingeConstraint.SetMaxFrictionTorque(maxFriction);
+    }
+
+    /**
+     * Check if a hinge joint has limits enabled.
+     */
+    hasHingeJointLimits(jointId: integer | string): boolean {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return false;
+      const hingeConstraint = Jolt.castObject(
+        constraint,
+        Jolt.HingeConstraint
+      );
+      return hingeConstraint.HasLimits();
+    }
+
+    /**
+     * Get the minimum limit angle of a hinge joint (in degrees).
+     */
+    getHingeJointMinLimit(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const hingeConstraint = Jolt.castObject(
+        constraint,
+        Jolt.HingeConstraint
+      );
+      return gdjs.toDegrees(hingeConstraint.GetLimitsMin());
+    }
+
+    /**
+     * Get the maximum limit angle of a hinge joint (in degrees).
+     */
+    getHingeJointMaxLimit(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const hingeConstraint = Jolt.castObject(
+        constraint,
+        Jolt.HingeConstraint
+      );
+      return gdjs.toDegrees(hingeConstraint.GetLimitsMax());
+    }
+
+    /**
+     * Set spring settings on slider joint limits.
+     */
+    setSliderJointSpring(
+      jointId: integer | string,
+      frequency: float,
+      damping: float
+    ): void {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return;
+      const sliderConstraint = Jolt.castObject(
+        constraint,
+        Jolt.SliderConstraint
+      );
+      const springSettings = new Jolt.SpringSettings();
+      springSettings.mFrequency = frequency;
+      springSettings.mDamping = damping;
+      sliderConstraint.SetLimitsSpringSettings(springSettings);
+      Jolt.destroy(springSettings);
+    }
+
+    /**
+     * Set max friction force on a slider joint.
+     */
+    setSliderJointMaxFriction(
+      jointId: integer | string,
+      maxFriction: float
+    ): void {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return;
+      const sliderConstraint = Jolt.castObject(
+        constraint,
+        Jolt.SliderConstraint
+      );
+      sliderConstraint.SetMaxFrictionForce(maxFriction);
+    }
+
+    /**
+     * Check if a slider joint has limits enabled.
+     */
+    hasSliderJointLimits(jointId: integer | string): boolean {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return false;
+      const sliderConstraint = Jolt.castObject(
+        constraint,
+        Jolt.SliderConstraint
+      );
+      return sliderConstraint.HasLimits();
+    }
+
+    /**
+     * Get the minimum limit of a slider joint (in pixels).
+     */
+    getSliderJointMinLimit(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const sliderConstraint = Jolt.castObject(
+        constraint,
+        Jolt.SliderConstraint
+      );
+      return sliderConstraint.GetLimitsMin() * this._sharedData.worldScale;
+    }
+
+    /**
+     * Get the maximum limit of a slider joint (in pixels).
+     */
+    getSliderJointMaxLimit(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const sliderConstraint = Jolt.castObject(
+        constraint,
+        Jolt.SliderConstraint
+      );
+      return sliderConstraint.GetLimitsMax() * this._sharedData.worldScale;
+    }
+
+    /**
+     * Set spring settings on a distance joint.
+     */
+    setDistanceJointSpring(
+      jointId: integer | string,
+      frequency: float,
+      damping: float
+    ): void {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return;
+      const distanceConstraint = Jolt.castObject(
+        constraint,
+        Jolt.DistanceConstraint
+      );
+      const springSettings = new Jolt.SpringSettings();
+      springSettings.mFrequency = frequency;
+      springSettings.mDamping = damping;
+      distanceConstraint.SetLimitsSpringSettings(springSettings);
+      Jolt.destroy(springSettings);
+    }
+
+    /**
+     * Get the current minimum distance of a distance joint (in pixels).
+     */
+    getDistanceJointMinDistance(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const distanceConstraint = Jolt.castObject(
+        constraint,
+        Jolt.DistanceConstraint
+      );
+      return distanceConstraint.GetMinDistance() * this._sharedData.worldScale;
+    }
+
+    /**
+     * Get the current maximum distance of a distance joint (in pixels).
+     */
+    getDistanceJointMaxDistance(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const distanceConstraint = Jolt.castObject(
+        constraint,
+        Jolt.DistanceConstraint
+      );
+      return distanceConstraint.GetMaxDistance() * this._sharedData.worldScale;
+    }
+
+    /**
+     * Update the half cone angle of a cone joint at runtime (in degrees).
+     */
+    setConeJointHalfAngle(
+      jointId: integer | string,
+      halfAngle: float
+    ): void {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return;
+      const coneConstraint = Jolt.castObject(
+        constraint,
+        Jolt.ConeConstraint
+      );
+      coneConstraint.SetHalfConeAngle(gdjs.toRad(halfAngle));
+    }
+
+    // ==================== Joint Enable/Disable ====================
+
+    /**
+     * Enable a joint.
+     */
+    enableJoint(jointId: integer | string): void {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return;
+      constraint.SetEnabled(true);
+    }
+
+    /**
+     * Disable a joint without removing it.
+     */
+    disableJoint(jointId: integer | string): void {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return;
+      constraint.SetEnabled(false);
+    }
+
+    /**
+     * Check if a joint is enabled.
+     */
+    isJointEnabled(jointId: integer | string): boolean {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return false;
+      return constraint.GetEnabled();
+    }
+
+    /**
+     * Get the total number of active joints.
+     */
+    getJointCount(): integer {
+      return Object.keys(this._sharedData.joints).length;
+    }
+
+    // ==================== Hinge Motor Queries ====================
+
+    /**
+     * Get the current target angular velocity of a hinge joint motor (deg/s).
+     */
+    getHingeJointMotorSpeed(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const hingeConstraint = Jolt.castObject(
+        constraint,
+        Jolt.HingeConstraint
+      );
+      return gdjs.toDegrees(hingeConstraint.GetTargetAngularVelocity());
+    }
+
+    /**
+     * Get the current target angle of a hinge joint motor (degrees).
+     */
+    getHingeJointMotorTarget(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const hingeConstraint = Jolt.castObject(
+        constraint,
+        Jolt.HingeConstraint
+      );
+      return gdjs.toDegrees(hingeConstraint.GetTargetAngle());
+    }
+
+    /**
+     * Get the max friction torque of a hinge joint.
+     */
+    getHingeJointMaxFriction(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const hingeConstraint = Jolt.castObject(
+        constraint,
+        Jolt.HingeConstraint
+      );
+      return hingeConstraint.GetMaxFrictionTorque();
+    }
+
+    // ==================== Slider Motor Queries ====================
+
+    /**
+     * Get the current target velocity of a slider joint motor (px/s).
+     */
+    getSliderJointMotorSpeed(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const sliderConstraint = Jolt.castObject(
+        constraint,
+        Jolt.SliderConstraint
+      );
+      return sliderConstraint.GetTargetVelocity() * this._sharedData.worldScale;
+    }
+
+    /**
+     * Get the current target position of a slider joint motor (px).
+     */
+    getSliderJointMotorTarget(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const sliderConstraint = Jolt.castObject(
+        constraint,
+        Jolt.SliderConstraint
+      );
+      return sliderConstraint.GetTargetPosition() * this._sharedData.worldScale;
+    }
+
+    /**
+     * Get the max friction force of a slider joint.
+     */
+    getSliderJointMaxFriction(jointId: integer | string): float {
+      const constraint = this._sharedData.getJoint(jointId);
+      if (!constraint) return 0;
+      const sliderConstraint = Jolt.castObject(
+        constraint,
+        Jolt.SliderConstraint
+      );
+      return sliderConstraint.GetMaxFrictionForce();
+    }
   }
 
   gdjs.registerBehavior(
