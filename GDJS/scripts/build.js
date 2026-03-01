@@ -25,7 +25,7 @@ if (!args.out) {
   );
 }
 
-shell.mkdir('-p', bundledOutPath);
+require('fs').mkdirSync(bundledOutPath, { recursive: true });
 
 (async () => {
   // Generate the output file paths
