@@ -2105,6 +2105,232 @@ module.exports = {
     }
     {
       const effect = extension
+        .addEffect('PointLight')
+        .setFullName(_('Point light'))
+        .setDescription(
+          _(
+            'A light that emits in all directions from a position, like a light bulb. Can cast shadows.'
+          )
+        )
+        .markAsNotWorkingForObjects()
+        .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/PointLight.js');
+      const properties = effect.getProperties();
+      properties
+        .getOrCreate('color')
+        .setValue('255;255;255')
+        .setLabel(_('Light color'))
+        .setType('color');
+      properties
+        .getOrCreate('intensity')
+        .setValue('1')
+        .setLabel(_('Intensity'))
+        .setType('number');
+      properties
+        .getOrCreate('top')
+        .setValue('Z+')
+        .setLabel(_('3D world top'))
+        .setType('choice')
+        .addExtraInfo('Z+')
+        .addExtraInfo('Y-')
+        .setGroup(_('Position'));
+      properties
+        .getOrCreate('positionX')
+        .setValue('0')
+        .setLabel(_('X position'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Position'));
+      properties
+        .getOrCreate('positionY')
+        .setValue('0')
+        .setLabel(_('Y position'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Position'));
+      properties
+        .getOrCreate('positionZ')
+        .setValue('500')
+        .setLabel(_('Z position (height)'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Position'));
+      properties
+        .getOrCreate('distance')
+        .setValue('0')
+        .setLabel(_('Maximum distance'))
+        .setDescription(
+          _(
+            'Maximum range of the light. 0 means unlimited range.'
+          )
+        )
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Attenuation'));
+      properties
+        .getOrCreate('decay')
+        .setValue('2')
+        .setLabel(_('Decay'))
+        .setDescription(
+          _(
+            'How quickly the light dims with distance. 2 is physically correct. 0 means no decay.'
+          )
+        )
+        .setType('number')
+        .setGroup(_('Attenuation'));
+      properties
+        .getOrCreate('isCastingShadow')
+        .setValue('false')
+        .setLabel(_('Shadow casting'))
+        .setType('boolean')
+        .setGroup(_('Shadows'));
+      properties
+        .getOrCreate('shadowQuality')
+        .setValue('medium')
+        .addChoice('low', _('Low quality'))
+        .addChoice('medium', _('Medium quality'))
+        .addChoice('high', _('High quality'))
+        .setLabel(_('Shadow quality'))
+        .setType('choice')
+        .setGroup(_('Shadows'));
+    }
+    {
+      const effect = extension
+        .addEffect('SpotLight')
+        .setFullName(_('Spot light'))
+        .setDescription(
+          _(
+            'A light that emits a cone-shaped beam from a position toward a target, like a flashlight or a stage spotlight. Can cast shadows.'
+          )
+        )
+        .markAsNotWorkingForObjects()
+        .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/SpotLight.js');
+      const properties = effect.getProperties();
+      properties
+        .getOrCreate('color')
+        .setValue('255;255;255')
+        .setLabel(_('Light color'))
+        .setType('color');
+      properties
+        .getOrCreate('intensity')
+        .setValue('1')
+        .setLabel(_('Intensity'))
+        .setType('number');
+      properties
+        .getOrCreate('top')
+        .setValue('Z+')
+        .setLabel(_('3D world top'))
+        .setType('choice')
+        .addExtraInfo('Z+')
+        .addExtraInfo('Y-')
+        .setGroup(_('Light position'));
+      properties
+        .getOrCreate('positionX')
+        .setValue('0')
+        .setLabel(_('X position'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Light position'));
+      properties
+        .getOrCreate('positionY')
+        .setValue('0')
+        .setLabel(_('Y position'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Light position'));
+      properties
+        .getOrCreate('positionZ')
+        .setValue('500')
+        .setLabel(_('Z position (height)'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Light position'));
+      properties
+        .getOrCreate('targetX')
+        .setValue('0')
+        .setLabel(_('Target X position'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Target position'));
+      properties
+        .getOrCreate('targetY')
+        .setValue('0')
+        .setLabel(_('Target Y position'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Target position'));
+      properties
+        .getOrCreate('targetZ')
+        .setValue('0')
+        .setLabel(_('Target Z position'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Target position'));
+      properties
+        .getOrCreate('angle')
+        .setValue('45')
+        .setLabel(_('Cone angle'))
+        .setDescription(
+          _(
+            'Maximum angle of the light cone in degrees. A smaller value creates a narrower beam.'
+          )
+        )
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getDegreeAngle())
+        .setGroup(_('Cone'));
+      properties
+        .getOrCreate('penumbra')
+        .setValue('0.1')
+        .setLabel(_('Penumbra'))
+        .setDescription(
+          _(
+            'Percentage of the cone that is attenuated due to penumbra. 0 means sharp edges, 1 means fully soft edges.'
+          )
+        )
+        .setType('number')
+        .setGroup(_('Cone'));
+      properties
+        .getOrCreate('distance')
+        .setValue('0')
+        .setLabel(_('Maximum distance'))
+        .setDescription(
+          _(
+            'Maximum range of the light. 0 means unlimited range.'
+          )
+        )
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Attenuation'));
+      properties
+        .getOrCreate('decay')
+        .setValue('2')
+        .setLabel(_('Decay'))
+        .setDescription(
+          _(
+            'How quickly the light dims with distance. 2 is physically correct. 0 means no decay.'
+          )
+        )
+        .setType('number')
+        .setGroup(_('Attenuation'));
+      properties
+        .getOrCreate('isCastingShadow')
+        .setValue('false')
+        .setLabel(_('Shadow casting'))
+        .setType('boolean')
+        .setGroup(_('Shadows'));
+      properties
+        .getOrCreate('shadowQuality')
+        .setValue('medium')
+        .addChoice('low', _('Low quality'))
+        .addChoice('medium', _('Medium quality'))
+        .addChoice('high', _('High quality'))
+        .setLabel(_('Shadow quality'))
+        .setType('choice')
+        .setGroup(_('Shadows'));
+    }
+    {
+      const effect = extension
         .addEffect('Skybox')
         .setFullName(_('Skybox'))
         .setDescription(
