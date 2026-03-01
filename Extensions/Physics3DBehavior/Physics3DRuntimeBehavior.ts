@@ -2173,11 +2173,11 @@ namespace gdjs {
      * Get the other physics behavior from a picked object.
      */
     private _getOtherBody(
-      otherObject: gdjs.RuntimeObject,
-      otherBehaviorName: string
+      otherObject: gdjs.RuntimeObject
     ): Jolt.Body | null {
+      if (!otherObject || !otherObject.hasBehavior(this.name)) return null;
       const otherBehavior = otherObject.getBehavior(
-        otherBehaviorName
+        this.name
       ) as Physics3DRuntimeBehavior | null;
       if (!otherBehavior) return null;
       return otherBehavior.getBody();
@@ -2189,14 +2189,13 @@ namespace gdjs {
      */
     addFixedJoint(
       otherObject: gdjs.RuntimeObject,
-      otherBehaviorName: string,
       variable: gdjs.Variable
     ): void {
       if (this._body === null) {
         if (!this._createBody()) return;
       }
       const body = this._body!;
-      const otherBody = this._getOtherBody(otherObject, otherBehaviorName);
+      const otherBody = this._getOtherBody(otherObject);
       if (!otherBody) return;
 
       const settings = new Jolt.FixedConstraintSettings();
@@ -2223,7 +2222,6 @@ namespace gdjs {
      */
     addPointJoint(
       otherObject: gdjs.RuntimeObject,
-      otherBehaviorName: string,
       anchorX: float,
       anchorY: float,
       anchorZ: float,
@@ -2233,7 +2231,7 @@ namespace gdjs {
         if (!this._createBody()) return;
       }
       const body = this._body!;
-      const otherBody = this._getOtherBody(otherObject, otherBehaviorName);
+      const otherBody = this._getOtherBody(otherObject);
       if (!otherBody) return;
 
       const worldInvScale = this._sharedData.worldInvScale;
@@ -2270,7 +2268,6 @@ namespace gdjs {
      */
     addHingeJoint(
       otherObject: gdjs.RuntimeObject,
-      otherBehaviorName: string,
       anchorX: float,
       anchorY: float,
       anchorZ: float,
@@ -2283,7 +2280,7 @@ namespace gdjs {
         if (!this._createBody()) return;
       }
       const body = this._body!;
-      const otherBody = this._getOtherBody(otherObject, otherBehaviorName);
+      const otherBody = this._getOtherBody(otherObject);
       if (!otherBody) return;
 
       const worldInvScale = this._sharedData.worldInvScale;
@@ -2362,7 +2359,6 @@ namespace gdjs {
      */
     addSliderJoint(
       otherObject: gdjs.RuntimeObject,
-      otherBehaviorName: string,
       axisX: float,
       axisY: float,
       axisZ: float,
@@ -2372,7 +2368,7 @@ namespace gdjs {
         if (!this._createBody()) return;
       }
       const body = this._body!;
-      const otherBody = this._getOtherBody(otherObject, otherBehaviorName);
+      const otherBody = this._getOtherBody(otherObject);
       if (!otherBody) return;
 
       const settings = new Jolt.SliderConstraintSettings();
@@ -2410,7 +2406,6 @@ namespace gdjs {
      */
     addDistanceJoint(
       otherObject: gdjs.RuntimeObject,
-      otherBehaviorName: string,
       minDistance: float,
       maxDistance: float,
       springFrequency: float,
@@ -2421,7 +2416,7 @@ namespace gdjs {
         if (!this._createBody()) return;
       }
       const body = this._body!;
-      const otherBody = this._getOtherBody(otherObject, otherBehaviorName);
+      const otherBody = this._getOtherBody(otherObject);
       if (!otherBody) return;
 
       const worldInvScale = this._sharedData.worldInvScale;
@@ -2467,7 +2462,6 @@ namespace gdjs {
      */
     addConeJoint(
       otherObject: gdjs.RuntimeObject,
-      otherBehaviorName: string,
       anchorX: float,
       anchorY: float,
       anchorZ: float,
@@ -2481,7 +2475,7 @@ namespace gdjs {
         if (!this._createBody()) return;
       }
       const body = this._body!;
-      const otherBody = this._getOtherBody(otherObject, otherBehaviorName);
+      const otherBody = this._getOtherBody(otherObject);
       if (!otherBody) return;
 
       const worldInvScale = this._sharedData.worldInvScale;

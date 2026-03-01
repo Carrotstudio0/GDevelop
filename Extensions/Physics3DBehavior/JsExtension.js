@@ -1687,8 +1687,7 @@ module.exports = {
         )
         .addParameter('object', _('Object'), '', false)
         .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
-        .addParameter('object', _('Other object'), '', false)
-        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('objectPtr', _('Other object'), '', false)
         .addParameter('scenevar', _('Variable where to store the joint ID'))
         .setFunctionName('addFixedJoint');
 
@@ -1697,15 +1696,14 @@ module.exports = {
           'AddPointJoint',
           _('Add a point (ball and socket) joint'),
           _('Add a point joint between two objects. They will be linked together at a given world position, but will be able to rotate freely.'),
-          _('Add a point joint between _PARAM0_ and _PARAM2_ at _PARAM4_;_PARAM5_;_PARAM6_, save ID in _PARAM7_'),
+          _('Add a point joint between _PARAM0_ and _PARAM2_ at _PARAM3_;_PARAM4_;_PARAM5_, save ID in _PARAM6_'),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
         )
         .addParameter('object', _('Object'), '', false)
         .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
-        .addParameter('object', _('Other object'), '', false)
-        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('objectPtr', _('Other object'), '', false)
         .addParameter('expression', _('Joint position X'))
         .addParameter('expression', _('Joint position Y'))
         .addParameter('expression', _('Joint position Z'))
@@ -1717,15 +1715,14 @@ module.exports = {
           'AddHingeJoint',
           _('Add a hinge joint'),
           _('Add a hinge joint. Both objects will be linked together at a given position and allowed to rotate around the given axis.'),
-          _('Add a hinge joint between _PARAM0_ and _PARAM2_ at position _PARAM4_;_PARAM5_;_PARAM6_ around axis _PARAM7_;_PARAM8_;_PARAM9_, save ID in _PARAM10_'),
+          _('Add a hinge joint between _PARAM0_ and _PARAM2_ at position _PARAM3_;_PARAM4_;_PARAM5_ around axis _PARAM6_;_PARAM7_;_PARAM8_, save ID in _PARAM9_'),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
         )
         .addParameter('object', _('Object'), '', false)
         .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
-        .addParameter('object', _('Other object'), '', false)
-        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('objectPtr', _('Other object'), '', false)
         .addParameter('expression', _('Joint position X'))
         .addParameter('expression', _('Joint position Y'))
         .addParameter('expression', _('Joint position Z'))
@@ -1740,15 +1737,14 @@ module.exports = {
           'AddSliderJoint',
           _('Add a slider joint'),
           _('Add a slider joint. Both objects will be linked but allowed to slide along an axis.'),
-          _('Add a slider joint between _PARAM0_ and _PARAM2_ on axis _PARAM4_;_PARAM5_;_PARAM6_, save ID in _PARAM7_'),
+          _('Add a slider joint between _PARAM0_ and _PARAM2_ on axis _PARAM3_;_PARAM4_;_PARAM5_, save ID in _PARAM6_'),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
         )
         .addParameter('object', _('Object'), '', false)
         .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
-        .addParameter('object', _('Other object'), '', false)
-        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('objectPtr', _('Other object'), '', false)
         .addParameter('expression', _('Axis X'))
         .addParameter('expression', _('Axis Y'))
         .addParameter('expression', _('Axis Z'))
@@ -1760,15 +1756,14 @@ module.exports = {
           'AddDistanceJoint',
           _('Add a distance joint'),
           _('Add a distance joint. Keeps a minimum and maximum distance between the center of mass of both objects, optionally using a spring.'),
-          _('Add a distance joint between _PARAM0_ and _PARAM2_ (min: _PARAM4_, max: _PARAM5_, spring freq: _PARAM6_, damping: _PARAM7_), save ID to _PARAM8_'),
+          _('Add a distance joint between _PARAM0_ and _PARAM2_ (min: _PARAM3_, max: _PARAM4_, spring freq: _PARAM5_, damping: _PARAM6_), save ID to _PARAM7_'),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
         )
         .addParameter('object', _('Object'), '', false)
         .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
-        .addParameter('object', _('Other object'), '', false)
-        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('objectPtr', _('Other object'), '', false)
         .addParameter('expression', _('Minimum distance (pixels)'))
         .addParameter('expression', _('Maximum distance (pixels)'))
         .addParameter('expression', _('Spring frequency (0 to disable)'))
@@ -1781,15 +1776,14 @@ module.exports = {
           'AddConeJoint',
           _('Add a cone joint'),
           _('Add a cone joint. Constraints the movement to a cone shape around a twist axis.'),
-          _('Add a cone joint between _PARAM0_ and _PARAM2_ at _PARAM4_;_PARAM5_;_PARAM6_ (twist axis _PARAM7_;_PARAM8_;_PARAM9_, half angle _PARAM10_°), save ID to _PARAM11_'),
+          _('Add a cone joint between _PARAM0_ and _PARAM2_ at _PARAM3_;_PARAM4_;_PARAM5_ (twist axis _PARAM6_;_PARAM7_;_PARAM8_, half angle _PARAM9_°), save ID to _PARAM10_'),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
         )
         .addParameter('object', _('Object'), '', false)
         .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
-        .addParameter('object', _('Other object'), '', false)
-        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('objectPtr', _('Other object'), '', false)
         .addParameter('expression', _('Joint position X'))
         .addParameter('expression', _('Joint position Y'))
         .addParameter('expression', _('Joint position Z'))
