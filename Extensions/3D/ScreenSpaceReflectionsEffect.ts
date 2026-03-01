@@ -229,6 +229,7 @@ namespace gdjs {
           _sceneRenderTarget: THREE.WebGLRenderTarget;
           _previousViewport: THREE.Vector4;
           _previousScissor: THREE.Vector4;
+          _renderSize: THREE.Vector2;
 
           constructor() {
             this.shaderPass = new THREE_ADDONS.ShaderPass(
@@ -258,6 +259,7 @@ namespace gdjs {
             this.shaderPass.enabled = true;
             this._previousViewport = new THREE.Vector4();
             this._previousScissor = new THREE.Vector4();
+            this._renderSize = new THREE.Vector2();
           }
 
           isEnabled(target: EffectsTarget): boolean {
@@ -291,14 +293,17 @@ namespace gdjs {
           }
 
           private _updateRenderTargetSize(
-            target: gdjs.Layer
+            target: gdjs.Layer,
+            threeRenderer: THREE.WebGLRenderer
           ): void {
-            const pixelRatio =
-              typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
-            const width = Math.max(1, Math.round(target.getWidth() * pixelRatio));
+            threeRenderer.getDrawingBufferSize(this._renderSize);
+            const width = Math.max(
+              1,
+              Math.round(this._renderSize.x || target.getWidth())
+            );
             const height = Math.max(
               1,
-              Math.round(target.getHeight() * pixelRatio)
+              Math.round(this._renderSize.y || target.getHeight())
             );
             if (
               this._sceneRenderTarget.width !== width ||
@@ -315,6 +320,8 @@ namespace gdjs {
               this._sceneRenderTarget.texture;
             this.shaderPass.uniforms.tDepth.value =
               this._sceneRenderTarget.depthTexture;
+            this._sceneRenderTarget.texture.colorSpace =
+              threeRenderer.outputColorSpace;
           }
 
           private _captureScene(
@@ -364,7 +371,7 @@ namespace gdjs {
               return;
             }
 
-            this._updateRenderTargetSize(target);
+            this._updateRenderTargetSize(target, threeRenderer);
 
             threeCamera.updateMatrixWorld();
             this.shaderPass.uniforms.cameraProjectionMatrix.value.copy(
