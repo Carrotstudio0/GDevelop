@@ -2705,6 +2705,51 @@ module.exports = {
     }
     {
       const effect = extension
+        .addEffect('SSAO')
+        .setFullName(_('Ambient occlusion (SSAO)'))
+        .setDescription(
+          _(
+            'Screen-space ambient occlusion that darkens corners, crevices and contact areas using depth.'
+          )
+        )
+        .markAsNotWorkingForObjects()
+        .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/SSAOEffect.js');
+      const properties = effect.getProperties();
+      properties
+        .getOrCreate('enabled')
+        .setValue('true')
+        .setLabel(_('Enabled'))
+        .setType('boolean');
+      properties
+        .getOrCreate('radius')
+        .setValue('80')
+        .setLabel(_('Radius'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setDescription(_('Sampling radius in view space.'));
+      properties
+        .getOrCreate('intensity')
+        .setValue('1')
+        .setLabel(_('Intensity'))
+        .setType('number')
+        .setDescription(_('How strong occlusion darkening is.'));
+      properties
+        .getOrCreate('bias')
+        .setValue('2')
+        .setLabel(_('Bias'))
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setDescription(_('Prevents self-occlusion artifacts.'));
+      properties
+        .getOrCreate('samples')
+        .setValue('16')
+        .setLabel(_('Samples'))
+        .setType('number')
+        .setDescription(_('Quality/performance control (higher = better, slower).'));
+    }
+    {
+      const effect = extension
         .addEffect('VolumetricFog')
         .setFullName(_('Volumetric fog'))
         .setDescription(
