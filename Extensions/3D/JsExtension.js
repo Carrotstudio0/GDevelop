@@ -2418,6 +2418,59 @@ module.exports = {
         .setType('boolean')
         .setGroup(_('Attachment'));
       properties
+        .getOrCreate('physicsBounceEnabled')
+        .setValue('false')
+        .setLabel(_('Physics bounce (Jolt)'))
+        .setDescription(
+          _(
+            'Enable one-bounce reflected light using a raycast on Physics3D/Jolt bodies.'
+          )
+        )
+        .setType('boolean')
+        .setGroup(_('Physics bounce'));
+      properties
+        .getOrCreate('physicsBounceIntensityScale')
+        .setValue('0.35')
+        .setLabel(_('Bounce intensity scale'))
+        .setDescription(
+          _(
+            'Intensity multiplier for the bounced light (0 disables bounced intensity).'
+          )
+        )
+        .setType('number')
+        .setGroup(_('Physics bounce'));
+      properties
+        .getOrCreate('physicsBounceDistance')
+        .setValue('600')
+        .setLabel(_('Bounce distance'))
+        .setDescription(
+          _('Maximum distance of the bounced light beam (in pixels).')
+        )
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Physics bounce'));
+      properties
+        .getOrCreate('physicsBounceOriginOffset')
+        .setValue('2')
+        .setLabel(_('Bounce origin offset'))
+        .setDescription(
+          _(
+            'Small offset from the hit point along the surface normal to avoid self-intersection artifacts.'
+          )
+        )
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Physics bounce'));
+      properties
+        .getOrCreate('physicsBounceCastShadow')
+        .setValue('false')
+        .setLabel(_('Bounce casts shadows'))
+        .setDescription(
+          _('Enable shadows for the bounced light (higher performance cost).')
+        )
+        .setType('boolean')
+        .setGroup(_('Physics bounce'));
+      properties
         .getOrCreate('angle')
         .setValue('45')
         .setLabel(_('Cone angle'))

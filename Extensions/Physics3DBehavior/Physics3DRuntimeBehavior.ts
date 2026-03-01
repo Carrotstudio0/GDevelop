@@ -54,6 +54,51 @@ namespace gdjs {
     props: Physics3DNetworkSyncDataType;
   }
 
+  /** @category Behaviors > Physics 3D */
+  export interface Physics3DRaycastResult {
+    hasHit: boolean;
+    hitX: float;
+    hitY: float;
+    hitZ: float;
+    normalX: float;
+    normalY: float;
+    normalZ: float;
+    reflectionDirectionX: float;
+    reflectionDirectionY: float;
+    reflectionDirectionZ: float;
+    distance: float;
+    fraction: float;
+    hitBehavior: gdjs.Physics3DRuntimeBehavior | null;
+  }
+
+  const makeNewPhysics3DRaycastResult = (): Physics3DRaycastResult => ({
+    hasHit: false,
+    hitX: 0,
+    hitY: 0,
+    hitZ: 0,
+    normalX: 0,
+    normalY: 0,
+    normalZ: 0,
+    reflectionDirectionX: 0,
+    reflectionDirectionY: 0,
+    reflectionDirectionZ: 0,
+    distance: 0,
+    fraction: 0,
+    hitBehavior: null,
+  });
+
+  const normalize3 = (
+    x: float,
+    y: float,
+    z: float
+  ): [float, float, float, float] => {
+    const length = Math.sqrt(x * x + y * y + z * z);
+    if (length <= epsilon) {
+      return [0, 0, 0, 0];
+    }
+    return [x / length, y / length, z / length, length];
+  };
+
   const isModel3D = (
     object: gdjs.RuntimeObject
   ): object is gdjs.Model3DRuntimeObject => {
@@ -556,6 +601,8 @@ namespace gdjs {
     _objectOldWidth: float = 0;
     _objectOldHeight: float = 0;
     _objectOldDepth: float = 0;
+    private _lastRaycastResult: Physics3DRaycastResult =
+      makeNewPhysics3DRaycastResult();
 
     constructor(
       instanceContainer: gdjs.RuntimeInstanceContainer,
@@ -2247,6 +2294,261 @@ namespace gdjs {
       ) as Physics3DRuntimeBehavior | null;
       if (!behavior1) return false;
       return behavior1.collisionChecker.hasCollisionStoppedWith(object2);
+    }
+
+    static raycastClosestInScene(
+      runtimeScene: gdjs.RuntimeScene,
+      startX: float,
+      startY: float,
+      startZ: float,
+      endX: float,
+      endY: float,
+      endZ: float,
+      ignoreBehavior: gdjs.Physics3DRuntimeBehavior | null = null,
+      outResult: Physics3DRaycastResult = makeNewPhysics3DRaycastResult()
+    ): Physics3DRaycastResult {
+      outResult.hasHit = false;
+      outResult.hitX = 0;
+      outResult.hitY = 0;
+      outResult.hitZ = 0;
+      outResult.normalX = 0;
+      outResult.normalY = 0;
+      outResult.normalZ = 0;
+      outResult.reflectionDirectionX = 0;
+      outResult.reflectionDirectionY = 0;
+      outResult.reflectionDirectionZ = 0;
+      outResult.distance = 0;
+      outResult.fraction = 0;
+      outResult.hitBehavior = null;
+
+      const physics3DSharedData = runtimeScene.physics3DSharedData;
+      if (!physics3DSharedData) {
+        return outResult;
+      }
+
+      const [incomingDirectionX, incomingDirectionY, incomingDirectionZ, rayLength] =
+        normalize3(endX - startX, endY - startY, endZ - startZ);
+      if (rayLength <= epsilon) {
+        return outResult;
+      }
+
+      const worldInvScale = physics3DSharedData.worldInvScale;
+      const worldScale = physics3DSharedData.worldScale;
+
+      let rayCast: Jolt.RRayCast | null = null;
+      let rayCastSettings: Jolt.RayCastSettings | null = null;
+      let collector: Jolt.CastRayClosestHitCollisionCollector | null = null;
+      let broadPhaseLayerFilter: Jolt.DefaultBroadPhaseLayerFilter | null =
+        null;
+      let objectLayerFilter: Jolt.DefaultObjectLayerFilter | null = null;
+      let bodyFilter:
+        | Jolt.BodyFilterJS
+        | Jolt.IgnoreSingleBodyFilter
+        | null = null;
+      let shapeFilter: Jolt.ShapeFilterJS2 | null = null;
+
+      try {
+        rayCast = new Jolt.RRayCast(
+          physics3DSharedData.getRVec3(
+            startX * worldInvScale,
+            startY * worldInvScale,
+            startZ * worldInvScale
+          ),
+          physics3DSharedData.getVec3(
+            (endX - startX) * worldInvScale,
+            (endY - startY) * worldInvScale,
+            (endZ - startZ) * worldInvScale
+          )
+        );
+
+        rayCastSettings = new Jolt.RayCastSettings();
+        collector = new Jolt.CastRayClosestHitCollisionCollector();
+        broadPhaseLayerFilter = new Jolt.DefaultBroadPhaseLayerFilter(
+          physics3DSharedData.jolt.GetObjectVsBroadPhaseLayerFilter(),
+          gdjs.Physics3DSharedData.allLayersMask
+        );
+        objectLayerFilter = new Jolt.DefaultObjectLayerFilter(
+          physics3DSharedData.jolt.GetObjectLayerPairFilter(),
+          gdjs.Physics3DSharedData.allLayersMask
+        );
+        if (ignoreBehavior && ignoreBehavior.getBody()) {
+          bodyFilter = new Jolt.IgnoreSingleBodyFilter(
+            ignoreBehavior.getBody()!.GetID()
+          );
+        } else {
+          const defaultBodyFilter = new Jolt.BodyFilterJS();
+          defaultBodyFilter.ShouldCollide = (_inBodyID: number) => true;
+          defaultBodyFilter.ShouldCollideLocked = (_inBody: number) => true;
+          bodyFilter = defaultBodyFilter;
+        }
+        shapeFilter = new Jolt.ShapeFilterJS2();
+        shapeFilter.ShouldCollide = (
+          _inShape1: number,
+          _inSubShapeIDOfShape1: number,
+          _inShape2: number,
+          _inSubShapeIDOfShape2: number
+        ) => true;
+
+        const narrowPhaseQuery =
+          physics3DSharedData.physicsSystem.GetNarrowPhaseQueryNoLock();
+        narrowPhaseQuery.CastRay(
+          rayCast,
+          rayCastSettings,
+          collector,
+          broadPhaseLayerFilter,
+          objectLayerFilter,
+          bodyFilter,
+          shapeFilter
+        );
+
+        if (!collector.HadHit()) {
+          return outResult;
+        }
+
+        const hit = collector.mHit;
+        const hitPoint = rayCast.GetPointOnRay(hit.mFraction);
+        outResult.hasHit = true;
+        outResult.fraction = hit.mFraction;
+        outResult.distance = rayLength * hit.mFraction;
+        outResult.hitX = hitPoint.GetX() * worldScale;
+        outResult.hitY = hitPoint.GetY() * worldScale;
+        outResult.hitZ = hitPoint.GetZ() * worldScale;
+
+        let normalX = -incomingDirectionX;
+        let normalY = -incomingDirectionY;
+        let normalZ = -incomingDirectionZ;
+
+        const bodyLockInterface =
+          physics3DSharedData.physicsSystem.GetBodyLockInterfaceNoLock();
+        const body = bodyLockInterface.TryGetBody(hit.mBodyID);
+        if (body) {
+          outResult.hitBehavior = body.gdjsAssociatedBehavior || null;
+          const normal = body.GetWorldSpaceSurfaceNormal(
+            hit.mSubShapeID2,
+            hitPoint
+          );
+          const [normalizedX, normalizedY, normalizedZ, normalLength] =
+            normalize3(normal.GetX(), normal.GetY(), normal.GetZ());
+          if (normalLength > epsilon) {
+            normalX = normalizedX;
+            normalY = normalizedY;
+            normalZ = normalizedZ;
+          }
+        }
+
+        outResult.normalX = normalX;
+        outResult.normalY = normalY;
+        outResult.normalZ = normalZ;
+
+        const dot =
+          incomingDirectionX * normalX +
+          incomingDirectionY * normalY +
+          incomingDirectionZ * normalZ;
+        const reflectedDirectionX = incomingDirectionX - 2 * dot * normalX;
+        const reflectedDirectionY = incomingDirectionY - 2 * dot * normalY;
+        const reflectedDirectionZ = incomingDirectionZ - 2 * dot * normalZ;
+        const [
+          normalizedReflectionDirectionX,
+          normalizedReflectionDirectionY,
+          normalizedReflectionDirectionZ,
+        ] = normalize3(
+          reflectedDirectionX,
+          reflectedDirectionY,
+          reflectedDirectionZ
+        );
+        outResult.reflectionDirectionX = normalizedReflectionDirectionX;
+        outResult.reflectionDirectionY = normalizedReflectionDirectionY;
+        outResult.reflectionDirectionZ = normalizedReflectionDirectionZ;
+      } catch {
+        // Ignore errors and keep a "no hit" result.
+      } finally {
+        if (shapeFilter) Jolt.destroy(shapeFilter);
+        if (bodyFilter) Jolt.destroy(bodyFilter);
+        if (objectLayerFilter) Jolt.destroy(objectLayerFilter);
+        if (broadPhaseLayerFilter) Jolt.destroy(broadPhaseLayerFilter);
+        if (collector) Jolt.destroy(collector);
+        if (rayCastSettings) Jolt.destroy(rayCastSettings);
+        if (rayCast) Jolt.destroy(rayCast);
+      }
+
+      return outResult;
+    }
+
+    raycastClosest(
+      startX: float,
+      startY: float,
+      startZ: float,
+      endX: float,
+      endY: float,
+      endZ: float,
+      ignoreSelf: boolean
+    ): void {
+      gdjs.Physics3DRuntimeBehavior.raycastClosestInScene(
+        this.owner.getRuntimeScene(),
+        startX,
+        startY,
+        startZ,
+        endX,
+        endY,
+        endZ,
+        ignoreSelf ? this : null,
+        this._lastRaycastResult
+      );
+    }
+
+    didLastRaycastHit(): boolean {
+      return this._lastRaycastResult.hasHit;
+    }
+
+    didLastRaycastHitObject(object: gdjs.RuntimeObject): boolean {
+      if (!this._lastRaycastResult.hasHit) {
+        return false;
+      }
+      return this._lastRaycastResult.hitBehavior?.owner === object;
+    }
+
+    getLastRaycastHitX(): float {
+      return this._lastRaycastResult.hitX;
+    }
+
+    getLastRaycastHitY(): float {
+      return this._lastRaycastResult.hitY;
+    }
+
+    getLastRaycastHitZ(): float {
+      return this._lastRaycastResult.hitZ;
+    }
+
+    getLastRaycastNormalX(): float {
+      return this._lastRaycastResult.normalX;
+    }
+
+    getLastRaycastNormalY(): float {
+      return this._lastRaycastResult.normalY;
+    }
+
+    getLastRaycastNormalZ(): float {
+      return this._lastRaycastResult.normalZ;
+    }
+
+    getLastRaycastReflectionDirectionX(): float {
+      return this._lastRaycastResult.reflectionDirectionX;
+    }
+
+    getLastRaycastReflectionDirectionY(): float {
+      return this._lastRaycastResult.reflectionDirectionY;
+    }
+
+    getLastRaycastReflectionDirectionZ(): float {
+      return this._lastRaycastResult.reflectionDirectionZ;
+    }
+
+    getLastRaycastDistance(): float {
+      return this._lastRaycastResult.distance;
+    }
+
+    getLastRaycastFraction(): float {
+      return this._lastRaycastResult.fraction;
     }
 
     // ==================== Joint Methods ====================

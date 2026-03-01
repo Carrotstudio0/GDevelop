@@ -25,6 +25,11 @@ namespace gdjs {
     toy?: number;
     toz?: number;
     ro?: boolean;
+    pbe?: boolean;
+    pbi?: number;
+    pbd?: number;
+    pbo?: number;
+    pbcs?: boolean;
   }
   gdjs.PixiFiltersTools.registerFilterCreator(
     'Scene3D::SpotLight',
@@ -62,9 +67,30 @@ namespace gdjs {
           private _targetAttachedOffsetY: float = 0;
           private _targetAttachedOffsetZ: float = 0;
           private _rotateOffsetsWithObjectAngle: boolean = false;
+          private _physicsBounceEnabled: boolean = false;
+          private _physicsBounceIntensityScale: float = 0.35;
+          private _physicsBounceDistance: float = 600;
+          private _physicsBounceOriginOffset: float = 2;
+          private _physicsBounceCastShadow: boolean = false;
+          private _physicsBounceRaycastResult: gdjs.Physics3DRaycastResult = {
+            hasHit: false,
+            hitX: 0,
+            hitY: 0,
+            hitZ: 0,
+            normalX: 0,
+            normalY: 0,
+            normalZ: 0,
+            reflectionDirectionX: 0,
+            reflectionDirectionY: 0,
+            reflectionDirectionZ: 0,
+            distance: 0,
+            fraction: 0,
+            hitBehavior: null,
+          };
 
           private _isEnabled: boolean = false;
           private _light: THREE.SpotLight;
+          private _bounceLight: THREE.SpotLight;
           private _shadowMapDirty = true;
           private _shadowCameraDirty = true;
 
@@ -76,6 +102,10 @@ namespace gdjs {
             this._light.decay = this._decay;
             this._updatePosition();
             this._updateTarget();
+
+            this._bounceLight = new THREE.SpotLight();
+            this._bounceLight.visible = false;
+            this._bounceLight.castShadow = this._physicsBounceCastShadow;
 
             // Configure shadow defaults
             this._light.shadow.bias = this._shadowBias;
@@ -123,20 +153,38 @@ namespace gdjs {
             this._light.shadow.camera.updateProjectionMatrix();
           }
 
-          private _setLightPosition(x: float, y: float, z: float): void {
+          private _setAnyPosition(
+            threeObject: THREE.Object3D,
+            x: float,
+            y: float,
+            z: float
+          ): void {
             if (this._top === 'Y-') {
-              this._light.position.set(
-                x,
-                -z,
-                y
-              );
+              threeObject.position.set(x, -z, y);
             } else {
-              this._light.position.set(
-                x,
-                y,
-                z
-              );
+              threeObject.position.set(x, y, z);
             }
+          }
+
+          private _getAnyPositionInGdCoordinates(
+            threeObject: THREE.Object3D
+          ): [float, float, float] {
+            if (this._top === 'Y-') {
+              return [
+                threeObject.position.x,
+                threeObject.position.z,
+                -threeObject.position.y,
+              ];
+            }
+            return [
+              threeObject.position.x,
+              threeObject.position.y,
+              threeObject.position.z,
+            ];
+          }
+
+          private _setLightPosition(x: float, y: float, z: float): void {
+            this._setAnyPosition(this._light, x, y, z);
           }
 
           private _updatePosition(): void {
@@ -148,19 +196,7 @@ namespace gdjs {
           }
 
           private _setTargetPosition(x: float, y: float, z: float): void {
-            if (this._top === 'Y-') {
-              this._light.target.position.set(
-                x,
-                -z,
-                y
-              );
-            } else {
-              this._light.target.position.set(
-                x,
-                y,
-                z
-              );
-            }
+            this._setAnyPosition(this._light.target, x, y, z);
           }
 
           private _updateTarget(): void {
@@ -169,6 +205,106 @@ namespace gdjs {
               this._targetY,
               this._targetZ
             );
+          }
+
+          private _hideBounceLight(): void {
+            this._bounceLight.visible = false;
+          }
+
+          private _updatePhysicsBounce(target: gdjs.EffectsTarget): void {
+            if (!this._physicsBounceEnabled) {
+              this._hideBounceLight();
+              return;
+            }
+
+            const runtimeScene = target.getRuntimeScene();
+            if (!runtimeScene) {
+              this._hideBounceLight();
+              return;
+            }
+
+            const physics3DRuntimeBehaviorClass = (gdjs as unknown as {
+              Physics3DRuntimeBehavior?: {
+                raycastClosestInScene?: (
+                  runtimeScene: gdjs.RuntimeScene,
+                  startX: float,
+                  startY: float,
+                  startZ: float,
+                  endX: float,
+                  endY: float,
+                  endZ: float,
+                  ignoreBehavior: gdjs.Physics3DRuntimeBehavior | null,
+                  outResult: gdjs.Physics3DRaycastResult
+                ) => gdjs.Physics3DRaycastResult;
+              };
+            }).Physics3DRuntimeBehavior;
+            const raycastClosestInScene =
+              physics3DRuntimeBehaviorClass &&
+              physics3DRuntimeBehaviorClass.raycastClosestInScene;
+
+            if (!raycastClosestInScene) {
+              this._hideBounceLight();
+              return;
+            }
+
+            const [startX, startY, startZ] = this._getAnyPositionInGdCoordinates(
+              this._light
+            );
+            const [targetX, targetY, targetZ] =
+              this._getAnyPositionInGdCoordinates(this._light.target);
+
+            const raycastResult = raycastClosestInScene(
+              runtimeScene,
+              startX,
+              startY,
+              startZ,
+              targetX,
+              targetY,
+              targetZ,
+              null,
+              this._physicsBounceRaycastResult
+            );
+            if (!raycastResult.hasHit) {
+              this._hideBounceLight();
+              return;
+            }
+
+            const offsetX =
+              raycastResult.hitX +
+              raycastResult.normalX * this._physicsBounceOriginOffset;
+            const offsetY =
+              raycastResult.hitY +
+              raycastResult.normalY * this._physicsBounceOriginOffset;
+            const offsetZ =
+              raycastResult.hitZ +
+              raycastResult.normalZ * this._physicsBounceOriginOffset;
+
+            const bouncedTargetX =
+              offsetX +
+              raycastResult.reflectionDirectionX * this._physicsBounceDistance;
+            const bouncedTargetY =
+              offsetY +
+              raycastResult.reflectionDirectionY * this._physicsBounceDistance;
+            const bouncedTargetZ =
+              offsetZ +
+              raycastResult.reflectionDirectionZ * this._physicsBounceDistance;
+
+            this._setAnyPosition(this._bounceLight, offsetX, offsetY, offsetZ);
+            this._setAnyPosition(
+              this._bounceLight.target,
+              bouncedTargetX,
+              bouncedTargetY,
+              bouncedTargetZ
+            );
+            this._bounceLight.color.copy(this._light.color);
+            this._bounceLight.intensity =
+              this._light.intensity * this._physicsBounceIntensityScale;
+            this._bounceLight.distance = this._physicsBounceDistance;
+            this._bounceLight.angle = this._light.angle;
+            this._bounceLight.penumbra = this._light.penumbra;
+            this._bounceLight.decay = this._light.decay;
+            this._bounceLight.castShadow = this._physicsBounceCastShadow;
+            this._bounceLight.visible = true;
           }
 
           private _getFirstObjectByName(
@@ -277,6 +413,8 @@ namespace gdjs {
             }
             scene.add(this._light);
             scene.add(this._light.target);
+            scene.add(this._bounceLight);
+            scene.add(this._bounceLight.target);
             this._isEnabled = true;
             return true;
           }
@@ -290,6 +428,8 @@ namespace gdjs {
             }
             scene.remove(this._light);
             scene.remove(this._light.target);
+            scene.remove(this._bounceLight);
+            scene.remove(this._bounceLight.target);
             this._isEnabled = false;
             return true;
           }
@@ -311,6 +451,7 @@ namespace gdjs {
 
             this._light.shadow.bias = this._shadowBias;
             this._light.shadow.normalBias = this._shadowNormalBias;
+            this._updatePhysicsBounce(target);
           }
           updateDoubleParameter(parameterName: string, value: number): void {
             if (parameterName === 'intensity') {
@@ -369,6 +510,12 @@ namespace gdjs {
             } else if (parameterName === 'shadowFar') {
               this._shadowFar = value;
               this._shadowCameraDirty = true;
+            } else if (parameterName === 'physicsBounceIntensityScale') {
+              this._physicsBounceIntensityScale = value;
+            } else if (parameterName === 'physicsBounceDistance') {
+              this._physicsBounceDistance = value;
+            } else if (parameterName === 'physicsBounceOriginOffset') {
+              this._physicsBounceOriginOffset = value;
             }
           }
           getDoubleParameter(parameterName: string): number {
@@ -414,6 +561,12 @@ namespace gdjs {
               return this._shadowNear;
             } else if (parameterName === 'shadowFar') {
               return this._shadowFar;
+            } else if (parameterName === 'physicsBounceIntensityScale') {
+              return this._physicsBounceIntensityScale;
+            } else if (parameterName === 'physicsBounceDistance') {
+              return this._physicsBounceDistance;
+            } else if (parameterName === 'physicsBounceOriginOffset') {
+              return this._physicsBounceOriginOffset;
             }
             return 0;
           }
@@ -465,6 +618,14 @@ namespace gdjs {
               this._light.castShadow = value;
             } else if (parameterName === 'rotateOffsetsWithObjectAngle') {
               this._rotateOffsetsWithObjectAngle = value;
+            } else if (parameterName === 'physicsBounceEnabled') {
+              this._physicsBounceEnabled = value;
+              if (!value) {
+                this._hideBounceLight();
+              }
+            } else if (parameterName === 'physicsBounceCastShadow') {
+              this._physicsBounceCastShadow = value;
+              this._bounceLight.castShadow = value;
             }
           }
           getNetworkSyncData(): SpotLightFilterNetworkSyncData {
@@ -494,6 +655,11 @@ namespace gdjs {
               toy: this._targetAttachedOffsetY,
               toz: this._targetAttachedOffsetZ,
               ro: this._rotateOffsetsWithObjectAngle,
+              pbe: this._physicsBounceEnabled,
+              pbi: this._physicsBounceIntensityScale,
+              pbd: this._physicsBounceDistance,
+              pbo: this._physicsBounceOriginOffset,
+              pbcs: this._physicsBounceCastShadow,
             };
           }
           updateFromNetworkSyncData(
@@ -524,10 +690,19 @@ namespace gdjs {
             this._targetAttachedOffsetY = syncData.toy ?? 0;
             this._targetAttachedOffsetZ = syncData.toz ?? 0;
             this._rotateOffsetsWithObjectAngle = syncData.ro ?? false;
+            this._physicsBounceEnabled = syncData.pbe ?? false;
+            this._physicsBounceIntensityScale = syncData.pbi ?? 0.35;
+            this._physicsBounceDistance = syncData.pbd ?? 600;
+            this._physicsBounceOriginOffset = syncData.pbo ?? 2;
+            this._physicsBounceCastShadow = syncData.pbcs ?? false;
             this._light.distance = syncData.d;
             this._light.angle = gdjs.toRad(syncData.a);
             this._light.penumbra = syncData.p;
             this._light.decay = syncData.dc;
+            this._bounceLight.castShadow = this._physicsBounceCastShadow;
+            if (!this._physicsBounceEnabled) {
+              this._hideBounceLight();
+            }
             this._updatePosition();
             this._updateTarget();
             this._shadowCameraDirty = true;

@@ -1739,6 +1739,204 @@ module.exports = {
         .getCodeExtraInformation()
         .setFunctionName('getMassCenterZ');
 
+      aut
+        .addScopedAction(
+          'RaycastClosest',
+          _('Cast ray (closest hit)'),
+          _(
+            'Cast a 3D ray in the Jolt physics world and store the closest hit data (position, normal, reflection direction) in this behavior.'
+          ),
+          _(
+            'Cast ray for _PARAM0_ from _PARAM2_; _PARAM3_; _PARAM4_ to _PARAM5_; _PARAM6_; _PARAM7_ (ignore self: _PARAM8_)'
+          ),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Start X'))
+        .addParameter('expression', _('Start Y'))
+        .addParameter('expression', _('Start Z'))
+        .addParameter('expression', _('End X'))
+        .addParameter('expression', _('End Y'))
+        .addParameter('expression', _('End Z'))
+        .addParameter('yesorno', _('Ignore this object while raycasting'))
+        .setFunctionName('raycastClosest');
+
+      aut
+        .addScopedCondition(
+          'DidLastRaycastHit',
+          _('Last raycast hit'),
+          _('Check if the last raycast from this behavior hit a physics body.'),
+          _('Last raycast from _PARAM0_ hit a body'),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('didLastRaycastHit');
+
+      aut
+        .addScopedCondition(
+          'DidLastRaycastHitObject',
+          _('Last raycast hit object'),
+          _(
+            'Check if the last raycast from this behavior hit the specified object.'
+          ),
+          _('Last raycast from _PARAM0_ hit _PARAM2_'),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('objectPtr', _('Object to test'))
+        .setFunctionName('didLastRaycastHitObject');
+
+      aut
+        .addExpression(
+          'LastRaycastHitX',
+          _('Last raycast hit X'),
+          _('Return X position of the last raycast hit point (in pixels).'),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('getLastRaycastHitX');
+
+      aut
+        .addExpression(
+          'LastRaycastHitY',
+          _('Last raycast hit Y'),
+          _('Return Y position of the last raycast hit point (in pixels).'),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('getLastRaycastHitY');
+
+      aut
+        .addExpression(
+          'LastRaycastHitZ',
+          _('Last raycast hit Z'),
+          _('Return Z position of the last raycast hit point (in pixels).'),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('getLastRaycastHitZ');
+
+      aut
+        .addExpression(
+          'LastRaycastNormalX',
+          _('Last raycast normal X'),
+          _('Return X component of the last raycast surface normal.'),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('getLastRaycastNormalX');
+
+      aut
+        .addExpression(
+          'LastRaycastNormalY',
+          _('Last raycast normal Y'),
+          _('Return Y component of the last raycast surface normal.'),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('getLastRaycastNormalY');
+
+      aut
+        .addExpression(
+          'LastRaycastNormalZ',
+          _('Last raycast normal Z'),
+          _('Return Z component of the last raycast surface normal.'),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('getLastRaycastNormalZ');
+
+      aut
+        .addExpression(
+          'LastRaycastReflectionDirectionX',
+          _('Last raycast reflection direction X'),
+          _(
+            'Return X component of the reflected direction computed from the last raycast hit.'
+          ),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('getLastRaycastReflectionDirectionX');
+
+      aut
+        .addExpression(
+          'LastRaycastReflectionDirectionY',
+          _('Last raycast reflection direction Y'),
+          _(
+            'Return Y component of the reflected direction computed from the last raycast hit.'
+          ),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('getLastRaycastReflectionDirectionY');
+
+      aut
+        .addExpression(
+          'LastRaycastReflectionDirectionZ',
+          _('Last raycast reflection direction Z'),
+          _(
+            'Return Z component of the reflected direction computed from the last raycast hit.'
+          ),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('getLastRaycastReflectionDirectionZ');
+
+      aut
+        .addExpression(
+          'LastRaycastDistance',
+          _('Last raycast distance'),
+          _(
+            'Return distance from ray start to hit point for the last raycast (in pixels).'
+          ),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('getLastRaycastDistance');
+
+      aut
+        .addExpression(
+          'LastRaycastFraction',
+          _('Last raycast fraction'),
+          _(
+            'Return fraction (0..1) of the last raycast where the hit occurred.'
+          ),
+          _('Raycast'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('getLastRaycastFraction');
+
       // Joints
       aut
         .addScopedAction(
