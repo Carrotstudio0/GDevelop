@@ -286,6 +286,314 @@ module.exports = {
           return true;
         }
 
+        if (propertyName === 'jointAutoWakeBodies') {
+          if (!behaviorContent.hasChild('jointAutoWakeBodies')) {
+            behaviorContent.addChild('jointAutoWakeBodies').setBoolValue(true);
+          }
+          behaviorContent
+            .getChild('jointAutoWakeBodies')
+            .setBoolValue(newValue === '1' || newValue === 'true');
+          return true;
+        }
+
+        if (propertyName === 'jointAutoStabilityPreset') {
+          const normalizedValue = newValue.toLowerCase();
+          let presetValue = 'Balanced';
+          if (normalizedValue === 'stable') presetValue = 'Stable';
+          else if (normalizedValue === 'ultrastable')
+            presetValue = 'UltraStable';
+          if (!behaviorContent.hasChild('jointAutoStabilityPreset')) {
+            behaviorContent
+              .addChild('jointAutoStabilityPreset')
+              .setStringValue('Stable');
+          }
+          behaviorContent
+            .getChild('jointAutoStabilityPreset')
+            .setStringValue(presetValue);
+          return true;
+        }
+
+        if (propertyName === 'jointAutoBreakForce') {
+          const newValueAsNumber = Math.max(0, parseFloat(newValue));
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointAutoBreakForce')) {
+            behaviorContent.addChild('jointAutoBreakForce').setDoubleValue(0);
+          }
+          behaviorContent
+            .getChild('jointAutoBreakForce')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointAutoBreakTorque') {
+          const newValueAsNumber = Math.max(0, parseFloat(newValue));
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointAutoBreakTorque')) {
+            behaviorContent.addChild('jointAutoBreakTorque').setDoubleValue(0);
+          }
+          behaviorContent
+            .getChild('jointAutoBreakTorque')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorEnabled') {
+          if (!behaviorContent.hasChild('jointEditorEnabled')) {
+            behaviorContent.addChild('jointEditorEnabled').setBoolValue(false);
+          }
+          behaviorContent
+            .getChild('jointEditorEnabled')
+            .setBoolValue(newValue === '1' || newValue === 'true');
+          return true;
+        }
+
+        if (propertyName === 'jointEditorTargetObjectName') {
+          if (!behaviorContent.hasChild('jointEditorTargetObjectName')) {
+            behaviorContent
+              .addChild('jointEditorTargetObjectName')
+              .setStringValue('');
+          }
+          behaviorContent
+            .getChild('jointEditorTargetObjectName')
+            .setStringValue(newValue);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorType') {
+          const normalizedValue = newValue.toLowerCase();
+          let jointType = 'None';
+          if (normalizedValue === 'fixed') jointType = 'Fixed';
+          else if (normalizedValue === 'point') jointType = 'Point';
+          else if (normalizedValue === 'hinge') jointType = 'Hinge';
+          else if (normalizedValue === 'slider') jointType = 'Slider';
+          else if (normalizedValue === 'distance') jointType = 'Distance';
+          else if (normalizedValue === 'cone') jointType = 'Cone';
+          else if (
+            normalizedValue === 'swingtwist' ||
+            normalizedValue === 'swing twist'
+          )
+            jointType = 'SwingTwist';
+          if (!behaviorContent.hasChild('jointEditorType')) {
+            behaviorContent.addChild('jointEditorType').setStringValue('None');
+          }
+          behaviorContent.getChild('jointEditorType').setStringValue(jointType);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorAnchorOffsetX') {
+          const newValueAsNumber = parseFloat(newValue);
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorAnchorOffsetX')) {
+            behaviorContent
+              .addChild('jointEditorAnchorOffsetX')
+              .setDoubleValue(0);
+          }
+          behaviorContent
+            .getChild('jointEditorAnchorOffsetX')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorAnchorOffsetY') {
+          const newValueAsNumber = parseFloat(newValue);
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorAnchorOffsetY')) {
+            behaviorContent
+              .addChild('jointEditorAnchorOffsetY')
+              .setDoubleValue(0);
+          }
+          behaviorContent
+            .getChild('jointEditorAnchorOffsetY')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorAnchorOffsetZ') {
+          const newValueAsNumber = parseFloat(newValue);
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorAnchorOffsetZ')) {
+            behaviorContent
+              .addChild('jointEditorAnchorOffsetZ')
+              .setDoubleValue(0);
+          }
+          behaviorContent
+            .getChild('jointEditorAnchorOffsetZ')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorTargetAnchorOffsetX') {
+          const newValueAsNumber = parseFloat(newValue);
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorTargetAnchorOffsetX')) {
+            behaviorContent
+              .addChild('jointEditorTargetAnchorOffsetX')
+              .setDoubleValue(0);
+          }
+          behaviorContent
+            .getChild('jointEditorTargetAnchorOffsetX')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorTargetAnchorOffsetY') {
+          const newValueAsNumber = parseFloat(newValue);
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorTargetAnchorOffsetY')) {
+            behaviorContent
+              .addChild('jointEditorTargetAnchorOffsetY')
+              .setDoubleValue(0);
+          }
+          behaviorContent
+            .getChild('jointEditorTargetAnchorOffsetY')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorTargetAnchorOffsetZ') {
+          const newValueAsNumber = parseFloat(newValue);
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorTargetAnchorOffsetZ')) {
+            behaviorContent
+              .addChild('jointEditorTargetAnchorOffsetZ')
+              .setDoubleValue(0);
+          }
+          behaviorContent
+            .getChild('jointEditorTargetAnchorOffsetZ')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorUseCustomAxis') {
+          if (!behaviorContent.hasChild('jointEditorUseCustomAxis')) {
+            behaviorContent
+              .addChild('jointEditorUseCustomAxis')
+              .setBoolValue(false);
+          }
+          behaviorContent
+            .getChild('jointEditorUseCustomAxis')
+            .setBoolValue(newValue === '1' || newValue === 'true');
+          return true;
+        }
+
+        if (propertyName === 'jointEditorAxisX') {
+          const newValueAsNumber = parseFloat(newValue);
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorAxisX')) {
+            behaviorContent.addChild('jointEditorAxisX').setDoubleValue(1);
+          }
+          behaviorContent
+            .getChild('jointEditorAxisX')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorAxisY') {
+          const newValueAsNumber = parseFloat(newValue);
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorAxisY')) {
+            behaviorContent.addChild('jointEditorAxisY').setDoubleValue(0);
+          }
+          behaviorContent
+            .getChild('jointEditorAxisY')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorAxisZ') {
+          const newValueAsNumber = parseFloat(newValue);
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorAxisZ')) {
+            behaviorContent.addChild('jointEditorAxisZ').setDoubleValue(0);
+          }
+          behaviorContent
+            .getChild('jointEditorAxisZ')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorHingeMinAngle') {
+          const newValueAsNumber = parseFloat(newValue);
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorHingeMinAngle')) {
+            behaviorContent
+              .addChild('jointEditorHingeMinAngle')
+              .setDoubleValue(-60);
+          }
+          behaviorContent
+            .getChild('jointEditorHingeMinAngle')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorHingeMaxAngle') {
+          const newValueAsNumber = parseFloat(newValue);
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorHingeMaxAngle')) {
+            behaviorContent
+              .addChild('jointEditorHingeMaxAngle')
+              .setDoubleValue(60);
+          }
+          behaviorContent
+            .getChild('jointEditorHingeMaxAngle')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorDistanceMin') {
+          const newValueAsNumber = Math.max(0, parseFloat(newValue));
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorDistanceMin')) {
+            behaviorContent
+              .addChild('jointEditorDistanceMin')
+              .setDoubleValue(0);
+          }
+          behaviorContent
+            .getChild('jointEditorDistanceMin')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorDistanceMax') {
+          const newValueAsNumber = Math.max(0, parseFloat(newValue));
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorDistanceMax')) {
+            behaviorContent
+              .addChild('jointEditorDistanceMax')
+              .setDoubleValue(0);
+          }
+          behaviorContent
+            .getChild('jointEditorDistanceMax')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
+        if (propertyName === 'jointEditorPreviewEnabled') {
+          if (!behaviorContent.hasChild('jointEditorPreviewEnabled')) {
+            behaviorContent
+              .addChild('jointEditorPreviewEnabled')
+              .setBoolValue(true);
+          }
+          behaviorContent
+            .getChild('jointEditorPreviewEnabled')
+            .setBoolValue(newValue === '1' || newValue === 'true');
+          return true;
+        }
+
+        if (propertyName === 'jointEditorPreviewSize') {
+          const newValueAsNumber = Math.max(1, parseFloat(newValue));
+          if (newValueAsNumber !== newValueAsNumber) return false;
+          if (!behaviorContent.hasChild('jointEditorPreviewSize')) {
+            behaviorContent
+              .addChild('jointEditorPreviewSize')
+              .setDoubleValue(8);
+          }
+          behaviorContent
+            .getChild('jointEditorPreviewSize')
+            .setDoubleValue(newValueAsNumber);
+          return true;
+        }
+
         return false;
       };
       behavior.getProperties = function (behaviorContent) {
@@ -693,6 +1001,451 @@ module.exports = {
           .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
           .setGroup(_('Ragdoll'));
 
+        if (!behaviorContent.hasChild('jointAutoWakeBodies')) {
+          behaviorContent.addChild('jointAutoWakeBodies').setBoolValue(true);
+        }
+        behaviorProperties
+          .getOrCreate('jointAutoWakeBodies')
+          .setValue(
+            behaviorContent.getChild('jointAutoWakeBodies').getBoolValue()
+              ? 'true'
+              : 'false'
+          )
+          .setType('Boolean')
+          .setLabel(_('Auto wake linked bodies'))
+          .setDescription(
+            _(
+              'When enabled, linked bodies are automatically activated after joint creation/changes so the constraint effect is immediate.'
+            )
+          )
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Realism'));
+
+        if (!behaviorContent.hasChild('jointAutoStabilityPreset')) {
+          behaviorContent
+            .addChild('jointAutoStabilityPreset')
+            .setStringValue('Stable');
+        }
+        behaviorProperties
+          .getOrCreate('jointAutoStabilityPreset')
+          .setValue(
+            behaviorContent
+              .getChild('jointAutoStabilityPreset')
+              .getStringValue()
+          )
+          .setType('Choice')
+          .setLabel(_('Default joint stability'))
+          .addChoice('Balanced', _('Balanced'))
+          .addChoice('Stable', _('Stable'))
+          .addChoice('UltraStable', _('Ultra Stable'))
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Realism'));
+
+        if (!behaviorContent.hasChild('jointAutoBreakForce')) {
+          behaviorContent.addChild('jointAutoBreakForce').setDoubleValue(0);
+        }
+        behaviorProperties
+          .getOrCreate('jointAutoBreakForce')
+          .setValue(
+            behaviorContent
+              .getChild('jointAutoBreakForce')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Auto break force'))
+          .setDescription(
+            _(
+              'If > 0, newly created joints break automatically when reaction force exceeds this threshold.'
+            )
+          )
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Realism'));
+
+        if (!behaviorContent.hasChild('jointAutoBreakTorque')) {
+          behaviorContent.addChild('jointAutoBreakTorque').setDoubleValue(0);
+        }
+        behaviorProperties
+          .getOrCreate('jointAutoBreakTorque')
+          .setValue(
+            behaviorContent
+              .getChild('jointAutoBreakTorque')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Auto break torque'))
+          .setDescription(
+            _(
+              'If > 0, newly created joints break automatically when reaction torque exceeds this threshold.'
+            )
+          )
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Realism'));
+
+        if (!behaviorContent.hasChild('jointEditorEnabled')) {
+          behaviorContent.addChild('jointEditorEnabled').setBoolValue(false);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorEnabled')
+          .setValue(
+            behaviorContent.getChild('jointEditorEnabled').getBoolValue()
+              ? 'true'
+              : 'false'
+          )
+          .setType('Boolean')
+          .setLabel(_('Enable joint editor link'))
+          .setDescription(
+            _(
+              'Automatically creates and maintains one physical joint from this object to a target object name.'
+            )
+          )
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorTargetObjectName')) {
+          behaviorContent
+            .addChild('jointEditorTargetObjectName')
+            .setStringValue('');
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorTargetObjectName')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorTargetObjectName')
+              .getStringValue()
+          )
+          .setType('String')
+          .setLabel(_('Target object name'))
+          .setDescription(
+            _(
+              'Object name to link to. The nearest valid instance is selected and kept linked.'
+            )
+          )
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorType')) {
+          behaviorContent.addChild('jointEditorType').setStringValue('None');
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorType')
+          .setValue(
+            behaviorContent.getChild('jointEditorType').getStringValue()
+          )
+          .setType('Choice')
+          .setLabel(_('Joint type'))
+          .addChoice('None', _('None'))
+          .addChoice('Fixed', _('Fixed'))
+          .addChoice('Point', _('Point'))
+          .addChoice('Hinge', _('Hinge'))
+          .addChoice('Slider', _('Slider'))
+          .addChoice('Distance', _('Distance'))
+          .addChoice('Cone', _('Cone'))
+          .addChoice('SwingTwist', _('SwingTwist'))
+          .setDescription(
+            _(
+              'Joint editor supports only Scene3D::Model3DObject and Scene3D::Cube3DObject for real physical links.'
+            )
+          )
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorAnchorOffsetX')) {
+          behaviorContent
+            .addChild('jointEditorAnchorOffsetX')
+            .setDoubleValue(0);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorAnchorOffsetX')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorAnchorOffsetX')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Source anchor offset X'))
+          .setDescription(
+            _(
+              'Local offset in pixels from this object center to place the joint anchor.'
+            )
+          )
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorAnchorOffsetY')) {
+          behaviorContent
+            .addChild('jointEditorAnchorOffsetY')
+            .setDoubleValue(0);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorAnchorOffsetY')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorAnchorOffsetY')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Source anchor offset Y'))
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorAnchorOffsetZ')) {
+          behaviorContent
+            .addChild('jointEditorAnchorOffsetZ')
+            .setDoubleValue(0);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorAnchorOffsetZ')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorAnchorOffsetZ')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Source anchor offset Z'))
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorTargetAnchorOffsetX')) {
+          behaviorContent
+            .addChild('jointEditorTargetAnchorOffsetX')
+            .setDoubleValue(0);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorTargetAnchorOffsetX')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorTargetAnchorOffsetX')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Target anchor offset X'))
+          .setDescription(
+            _(
+              'Local offset in pixels from target object center to place the joint anchor.'
+            )
+          )
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorTargetAnchorOffsetY')) {
+          behaviorContent
+            .addChild('jointEditorTargetAnchorOffsetY')
+            .setDoubleValue(0);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorTargetAnchorOffsetY')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorTargetAnchorOffsetY')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Target anchor offset Y'))
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorTargetAnchorOffsetZ')) {
+          behaviorContent
+            .addChild('jointEditorTargetAnchorOffsetZ')
+            .setDoubleValue(0);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorTargetAnchorOffsetZ')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorTargetAnchorOffsetZ')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Target anchor offset Z'))
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorUseCustomAxis')) {
+          behaviorContent
+            .addChild('jointEditorUseCustomAxis')
+            .setBoolValue(false);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorUseCustomAxis')
+          .setValue(
+            behaviorContent.getChild('jointEditorUseCustomAxis').getBoolValue()
+              ? 'true'
+              : 'false'
+          )
+          .setType('Boolean')
+          .setLabel(_('Use custom axis'))
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorAxisX')) {
+          behaviorContent.addChild('jointEditorAxisX').setDoubleValue(1);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorAxisX')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorAxisX')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Custom axis X'))
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorAxisY')) {
+          behaviorContent.addChild('jointEditorAxisY').setDoubleValue(0);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorAxisY')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorAxisY')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Custom axis Y'))
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorAxisZ')) {
+          behaviorContent.addChild('jointEditorAxisZ').setDoubleValue(0);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorAxisZ')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorAxisZ')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Custom axis Z'))
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorHingeMinAngle')) {
+          behaviorContent
+            .addChild('jointEditorHingeMinAngle')
+            .setDoubleValue(-60);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorHingeMinAngle')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorHingeMinAngle')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Hinge/Twist min angle'))
+          .setDescription(_('Used by Hinge, Cone and SwingTwist presets.'))
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorHingeMaxAngle')) {
+          behaviorContent
+            .addChild('jointEditorHingeMaxAngle')
+            .setDoubleValue(60);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorHingeMaxAngle')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorHingeMaxAngle')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Hinge/Twist max angle'))
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorDistanceMin')) {
+          behaviorContent.addChild('jointEditorDistanceMin').setDoubleValue(0);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorDistanceMin')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorDistanceMin')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Distance min'))
+          .setDescription(
+            _(
+              'Used by Distance joint. Leave min/max at 0 for automatic distance based on current pose.'
+            )
+          )
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorDistanceMax')) {
+          behaviorContent.addChild('jointEditorDistanceMax').setDoubleValue(0);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorDistanceMax')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorDistanceMax')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Distance max'))
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorPreviewEnabled')) {
+          behaviorContent
+            .addChild('jointEditorPreviewEnabled')
+            .setBoolValue(true);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorPreviewEnabled')
+          .setValue(
+            behaviorContent.getChild('jointEditorPreviewEnabled').getBoolValue()
+              ? 'true'
+              : 'false'
+          )
+          .setType('Boolean')
+          .setLabel(_('Show realtime preview'))
+          .setDescription(
+            _(
+              'Display source/target/anchor points and axis line in real time while editing.'
+            )
+          )
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
+        if (!behaviorContent.hasChild('jointEditorPreviewSize')) {
+          behaviorContent.addChild('jointEditorPreviewSize').setDoubleValue(8);
+        }
+        behaviorProperties
+          .getOrCreate('jointEditorPreviewSize')
+          .setValue(
+            behaviorContent
+              .getChild('jointEditorPreviewSize')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Preview size'))
+          .setQuickCustomizationVisibility(gd.QuickCustomization.Hidden)
+          .setGroup(_('Joint Editor (3D Object / 3D Box)'));
+
         return behaviorProperties;
       };
 
@@ -724,6 +1477,45 @@ module.exports = {
         behaviorContent.addChild('masks').setIntValue((1 << 4) | (1 << 0));
         behaviorContent.addChild('ragdollRole').setStringValue('None');
         behaviorContent.addChild('ragdollGroupTag').setStringValue('');
+        behaviorContent.addChild('jointAutoWakeBodies').setBoolValue(true);
+        behaviorContent
+          .addChild('jointAutoStabilityPreset')
+          .setStringValue('Stable');
+        behaviorContent.addChild('jointAutoBreakForce').setDoubleValue(0);
+        behaviorContent.addChild('jointAutoBreakTorque').setDoubleValue(0);
+        behaviorContent.addChild('jointEditorEnabled').setBoolValue(false);
+        behaviorContent
+          .addChild('jointEditorTargetObjectName')
+          .setStringValue('');
+        behaviorContent.addChild('jointEditorType').setStringValue('None');
+        behaviorContent.addChild('jointEditorAnchorOffsetX').setDoubleValue(0);
+        behaviorContent.addChild('jointEditorAnchorOffsetY').setDoubleValue(0);
+        behaviorContent.addChild('jointEditorAnchorOffsetZ').setDoubleValue(0);
+        behaviorContent
+          .addChild('jointEditorTargetAnchorOffsetX')
+          .setDoubleValue(0);
+        behaviorContent
+          .addChild('jointEditorTargetAnchorOffsetY')
+          .setDoubleValue(0);
+        behaviorContent
+          .addChild('jointEditorTargetAnchorOffsetZ')
+          .setDoubleValue(0);
+        behaviorContent
+          .addChild('jointEditorUseCustomAxis')
+          .setBoolValue(false);
+        behaviorContent.addChild('jointEditorAxisX').setDoubleValue(1);
+        behaviorContent.addChild('jointEditorAxisY').setDoubleValue(0);
+        behaviorContent.addChild('jointEditorAxisZ').setDoubleValue(0);
+        behaviorContent
+          .addChild('jointEditorHingeMinAngle')
+          .setDoubleValue(-60);
+        behaviorContent.addChild('jointEditorHingeMaxAngle').setDoubleValue(60);
+        behaviorContent.addChild('jointEditorDistanceMin').setDoubleValue(0);
+        behaviorContent.addChild('jointEditorDistanceMax').setDoubleValue(0);
+        behaviorContent
+          .addChild('jointEditorPreviewEnabled')
+          .setBoolValue(true);
+        behaviorContent.addChild('jointEditorPreviewSize').setDoubleValue(8);
       };
 
       const sharedData = new gd.BehaviorSharedDataJsImplementation();
@@ -1942,8 +2734,12 @@ module.exports = {
         .addScopedAction(
           'AddFixedJoint',
           _('Add a fixed joint'),
-          _('Add a fixed joint between two objects. They will be linked together and move as a single object.'),
-          _('Add a fixed joint between _PARAM0_ and _PARAM2_, save the joint ID in _PARAM3_'),
+          _(
+            'Add a fixed joint between two objects. They will be linked together and move as a single object.'
+          ),
+          _(
+            'Add a fixed joint between _PARAM0_ and _PARAM2_, save the joint ID in _PARAM3_'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -1958,8 +2754,12 @@ module.exports = {
         .addScopedAction(
           'AddPointJoint',
           _('Add a point (ball and socket) joint'),
-          _('Add a point joint between two objects. They will be linked together at a given world position, but will be able to rotate freely.'),
-          _('Add a point joint between _PARAM0_ and _PARAM2_ at _PARAM3_;_PARAM4_;_PARAM5_, save ID in _PARAM6_'),
+          _(
+            'Add a point joint between two objects. They will be linked together at a given world position, but will be able to rotate freely.'
+          ),
+          _(
+            'Add a point joint between _PARAM0_ and _PARAM2_ at _PARAM3_;_PARAM4_;_PARAM5_, save ID in _PARAM6_'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -1977,8 +2777,12 @@ module.exports = {
         .addScopedAction(
           'AddHingeJoint',
           _('Add a hinge joint'),
-          _('Add a hinge joint. Both objects will be linked together at a given position and allowed to rotate around the given axis.'),
-          _('Add a hinge joint between _PARAM0_ and _PARAM2_ at position _PARAM3_;_PARAM4_;_PARAM5_ around axis _PARAM6_;_PARAM7_;_PARAM8_, save ID in _PARAM9_'),
+          _(
+            'Add a hinge joint. Both objects will be linked together at a given position and allowed to rotate around the given axis.'
+          ),
+          _(
+            'Add a hinge joint between _PARAM0_ and _PARAM2_ at position _PARAM3_;_PARAM4_;_PARAM5_ around axis _PARAM6_;_PARAM7_;_PARAM8_, save ID in _PARAM9_'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -1999,8 +2803,12 @@ module.exports = {
         .addScopedAction(
           'AddSliderJoint',
           _('Add a slider joint'),
-          _('Add a slider joint. Both objects will be linked but allowed to slide along an axis.'),
-          _('Add a slider joint between _PARAM0_ and _PARAM2_ on axis _PARAM3_;_PARAM4_;_PARAM5_, save ID in _PARAM6_'),
+          _(
+            'Add a slider joint. Both objects will be linked but allowed to slide along an axis.'
+          ),
+          _(
+            'Add a slider joint between _PARAM0_ and _PARAM2_ on axis _PARAM3_;_PARAM4_;_PARAM5_, save ID in _PARAM6_'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -2018,8 +2826,12 @@ module.exports = {
         .addScopedAction(
           'AddDistanceJoint',
           _('Add a distance joint'),
-          _('Add a distance joint. Keeps a minimum and maximum distance between the center of mass of both objects, optionally using a spring.'),
-          _('Add a distance joint between _PARAM0_ and _PARAM2_ (min: _PARAM3_, max: _PARAM4_, spring freq: _PARAM5_, damping: _PARAM6_), save ID to _PARAM7_'),
+          _(
+            'Add a distance joint. Keeps a minimum and maximum distance between the center of mass of both objects, optionally using a spring.'
+          ),
+          _(
+            'Add a distance joint between _PARAM0_ and _PARAM2_ (min: _PARAM3_, max: _PARAM4_, spring freq: _PARAM5_, damping: _PARAM6_), save ID to _PARAM7_'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -2036,10 +2848,49 @@ module.exports = {
 
       aut
         .addScopedAction(
+          'AddPulleyJoint',
+          _('Add a pulley joint'),
+          _(
+            'Add a pulley joint between two objects using two fixed world pulley anchors and two local attachment points. The total rope length is constrained.'
+          ),
+          _(
+            'Add a pulley joint between _PARAM0_ and _PARAM2_ (total length: _PARAM15_, ratio: _PARAM16_, enabled: _PARAM17_), save ID in _PARAM18_'
+          ),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('objectPtr', _('Other object'), '', false)
+        .addParameter('expression', _('Pulley anchor A X (world, pixels)'))
+        .addParameter('expression', _('Pulley anchor A Y (world, pixels)'))
+        .addParameter('expression', _('Pulley anchor A Z (world, pixels)'))
+        .addParameter('expression', _('Pulley anchor B X (world, pixels)'))
+        .addParameter('expression', _('Pulley anchor B Y (world, pixels)'))
+        .addParameter('expression', _('Pulley anchor B Z (world, pixels)'))
+        .addParameter('expression', _('Local anchor A X (pixels)'))
+        .addParameter('expression', _('Local anchor A Y (pixels)'))
+        .addParameter('expression', _('Local anchor A Z (pixels)'))
+        .addParameter('expression', _('Local anchor B X (pixels)'))
+        .addParameter('expression', _('Local anchor B Y (pixels)'))
+        .addParameter('expression', _('Local anchor B Z (pixels)'))
+        .addParameter('expression', _('Total rope length (pixels)'))
+        .addParameter('expression', _('Pulley ratio (default 1.0)'))
+        .addParameter('yesorno', _('Enable joint'), '', false)
+        .addParameter('scenevar', _('Variable where to store the joint ID'))
+        .setFunctionName('addPulleyJoint');
+
+      aut
+        .addScopedAction(
           'AddConeJoint',
           _('Add a cone joint'),
-          _('Add a cone joint. Constraints the movement to a cone shape around a twist axis.'),
-          _('Add a cone joint between _PARAM0_ and _PARAM2_ at _PARAM3_;_PARAM4_;_PARAM5_ (twist axis _PARAM6_;_PARAM7_;_PARAM8_, half angle _PARAM9_°), save ID to _PARAM10_'),
+          _(
+            'Add a cone joint. Constraints the movement to a cone shape around a twist axis.'
+          ),
+          _(
+            'Add a cone joint between _PARAM0_ and _PARAM2_ at _PARAM3_;_PARAM4_;_PARAM5_ (twist axis _PARAM6_;_PARAM7_;_PARAM8_, half angle _PARAM9_°), save ID to _PARAM10_'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -2124,7 +2975,9 @@ module.exports = {
           'SetHingeJointMotor',
           _('Set hinge joint motor'),
           _('Set the motor state and target for a hinge joint.'),
-          _('Set hinge joint _PARAM2_ motor state to _PARAM3_ (target: _PARAM4_)'),
+          _(
+            'Set hinge joint _PARAM2_ motor state to _PARAM3_ (target: _PARAM4_)'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -2159,7 +3012,9 @@ module.exports = {
           'SetSliderJointLimits',
           _('Set slider joint limits'),
           _('Set the min and max distance for a slider joint.'),
-          _('Set slider joint _PARAM2_ limits (min: _PARAM3_ px, max: _PARAM4_ px)'),
+          _(
+            'Set slider joint _PARAM2_ limits (min: _PARAM3_ px, max: _PARAM4_ px)'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -2176,7 +3031,9 @@ module.exports = {
           'SetSliderJointMotor',
           _('Set slider joint motor'),
           _('Set the motor state and target for a slider joint.'),
-          _('Set slider joint _PARAM2_ motor state to _PARAM3_ (target: _PARAM4_)'),
+          _(
+            'Set slider joint _PARAM2_ motor state to _PARAM3_ (target: _PARAM4_)'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -2192,6 +3049,82 @@ module.exports = {
         )
         .addParameter('expression', _('Target velocity (px/s) or pos. (px)'))
         .setFunctionName('setSliderJointMotor');
+
+      aut
+        .addScopedAction(
+          'SetHingeJointMotorLimits',
+          _('Set hinge motor limits'),
+          _('Set torque limits used by the hinge motor solver.'),
+          _(
+            'Set hinge joint _PARAM2_ motor torque limits (min: _PARAM3_, max: _PARAM4_)'
+          ),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Min torque limit'))
+        .addParameter('expression', _('Max torque limit'))
+        .setFunctionName('setHingeJointMotorLimits');
+
+      aut
+        .addScopedAction(
+          'SetHingeJointMotorSpring',
+          _('Set hinge motor spring'),
+          _('Set spring frequency and damping for the hinge motor response.'),
+          _(
+            'Set hinge joint _PARAM2_ motor spring (frequency: _PARAM3_, damping: _PARAM4_)'
+          ),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Motor spring frequency (Hz)'))
+        .addParameter('expression', _('Motor spring damping'))
+        .setFunctionName('setHingeJointMotorSpring');
+
+      aut
+        .addScopedAction(
+          'SetSliderJointMotorLimits',
+          _('Set slider motor limits'),
+          _('Set force limits used by the slider motor solver.'),
+          _(
+            'Set slider joint _PARAM2_ motor force limits (min: _PARAM3_, max: _PARAM4_)'
+          ),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Min force limit'))
+        .addParameter('expression', _('Max force limit'))
+        .setFunctionName('setSliderJointMotorLimits');
+
+      aut
+        .addScopedAction(
+          'SetSliderJointMotorSpring',
+          _('Set slider motor spring'),
+          _('Set spring frequency and damping for the slider motor response.'),
+          _(
+            'Set slider joint _PARAM2_ motor spring (frequency: _PARAM3_, damping: _PARAM4_)'
+          ),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Motor spring frequency (Hz)'))
+        .addParameter('expression', _('Motor spring damping'))
+        .setFunctionName('setSliderJointMotorSpring');
 
       aut
         .addExpression(
@@ -2211,7 +3144,9 @@ module.exports = {
           'SetDistanceJointDistance',
           _('Set distance joint limits'),
           _('Set the min and max distance for a distance joint.'),
-          _('Set distance joint _PARAM2_ distance (min: _PARAM3_ px, max: _PARAM4_ px)'),
+          _(
+            'Set distance joint _PARAM2_ distance (min: _PARAM3_ px, max: _PARAM4_ px)'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -2223,15 +3158,67 @@ module.exports = {
         .addParameter('expression', _('Max distance (pixels)'))
         .setFunctionName('setDistanceJointDistance');
 
+      aut
+        .addScopedAction(
+          'SetPulleyJointLength',
+          _('Set pulley joint total length'),
+          _(
+            'Set the total rope length of a pulley joint. Internally this sets min and max rope lengths to the same value.'
+          ),
+          _('Set pulley joint _PARAM2_ total rope length to _PARAM3_ px'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Total rope length (pixels)'))
+        .setFunctionName('setPulleyJointLength');
+
+      aut
+        .addExpression(
+          'PulleyJointCurrentLength',
+          _('Pulley joint current length'),
+          _(
+            'Return the current rope length of a pulley joint (in pixels), updated as bodies move.'
+          ),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getPulleyJointCurrentLength');
+
+      aut
+        .addExpression(
+          'PulleyJointTotalLength',
+          _('Pulley joint total length'),
+          _(
+            'Return the configured total rope length of a pulley joint (in pixels).'
+          ),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getPulleyJointTotalLength');
+
       // ==================== Advanced Joint Customization ====================
 
       // Hinge Joint Spring
       aut
         .addScopedAction(
           'SetHingeJointSpring',
-          _('Set hinge joint spring'),
-          _('Set spring settings on a hinge joint limits (frequency and damping).'),
-          _('Set hinge joint _PARAM2_ spring (frequency: _PARAM3_, damping: _PARAM4_)'),
+          _('Set hinge limits spring'),
+          _(
+            'Set spring settings for hinge angle limits (frequency and damping).'
+          ),
+          _(
+            'Set hinge joint _PARAM2_ limits spring (frequency: _PARAM3_, damping: _PARAM4_)'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -2307,9 +3294,11 @@ module.exports = {
       aut
         .addScopedAction(
           'SetSliderJointSpring',
-          _('Set slider joint spring'),
-          _('Set spring settings on a slider joint limits (frequency and damping).'),
-          _('Set slider joint _PARAM2_ spring (frequency: _PARAM3_, damping: _PARAM4_)'),
+          _('Set slider limits spring'),
+          _('Set spring settings for slider limits (frequency and damping).'),
+          _(
+            'Set slider joint _PARAM2_ limits spring (frequency: _PARAM3_, damping: _PARAM4_)'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -2385,9 +3374,11 @@ module.exports = {
       aut
         .addScopedAction(
           'SetDistanceJointSpring',
-          _('Set distance joint spring'),
-          _('Set spring settings on a distance joint (frequency and damping).'),
-          _('Set distance joint _PARAM2_ spring (frequency: _PARAM3_, damping: _PARAM4_)'),
+          _('Set distance joint limits spring'),
+          _('Set spring settings for distance limits (frequency and damping).'),
+          _(
+            'Set distance joint _PARAM2_ limits spring (frequency: _PARAM3_, damping: _PARAM4_)'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -2404,7 +3395,9 @@ module.exports = {
         .addExpression(
           'DistanceJointMinDistance',
           _('Distance joint min distance'),
-          _('Return the current minimum distance of a distance joint (in pixels).'),
+          _(
+            'Return the current minimum distance of a distance joint (in pixels).'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg'
         )
@@ -2417,7 +3410,9 @@ module.exports = {
         .addExpression(
           'DistanceJointMaxDistance',
           _('Distance joint max distance'),
-          _('Return the current maximum distance of a distance joint (in pixels).'),
+          _(
+            'Return the current maximum distance of a distance joint (in pixels).'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg'
         )
@@ -2508,6 +3503,104 @@ module.exports = {
         .setFunctionName('disableJoint');
 
       aut
+        .addScopedAction(
+          'SetJointSolverOverrides',
+          _('Set joint solver overrides'),
+          _(
+            'Override velocity/position solver steps for this joint (0 = engine default).'
+          ),
+          _(
+            'Set joint _PARAM2_ solver overrides (velocity steps: _PARAM3_, position steps: _PARAM4_)'
+          ),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Velocity steps override'))
+        .addParameter('expression', _('Position steps override'))
+        .setFunctionName('setJointSolverOverrides');
+
+      aut
+        .addScopedAction(
+          'SetJointPriority',
+          _('Set joint solver priority'),
+          _(
+            'Set solver priority for a joint. Higher values are solved earlier.'
+          ),
+          _('Set joint _PARAM2_ priority to _PARAM3_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Priority'))
+        .setFunctionName('setJointPriority');
+
+      aut
+        .addScopedAction(
+          'SetJointStabilityPreset',
+          _('Set joint stability preset'),
+          _(
+            'Apply a pre-tuned stability preset on a joint (easy professional setup).'
+          ),
+          _('Set joint _PARAM2_ stability preset to _PARAM3_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter(
+          'stringWithSelector',
+          _('Preset'),
+          '["Balanced", "Stable", "UltraStable"]',
+          false
+        )
+        .setFunctionName('setJointStabilityPreset');
+
+      aut
+        .addScopedAction(
+          'SetJointBreakThresholds',
+          _('Set joint break thresholds'),
+          _(
+            'Set max reaction force/torque at which this joint automatically breaks.'
+          ),
+          _(
+            'Set joint _PARAM2_ break thresholds (force: _PARAM3_, torque: _PARAM4_)'
+          ),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .addParameter('expression', _('Max break force (<=0 disables)'))
+        .addParameter('expression', _('Max break torque (<=0 disables)'))
+        .setFunctionName('setJointBreakThresholds');
+
+      aut
+        .addScopedAction(
+          'ClearJointBreakThresholds',
+          _('Clear joint break thresholds'),
+          _('Disable automatic break thresholds on a joint.'),
+          _('Clear break thresholds for joint _PARAM2_'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('clearJointBreakThresholds');
+
+      aut
         .addScopedCondition(
           'IsJointEnabled',
           _('Joint is enabled'),
@@ -2523,6 +3616,23 @@ module.exports = {
         .setFunctionName('isJointEnabled');
 
       aut
+        .addScopedCondition(
+          'IsJointBroken',
+          _('Joint is broken'),
+          _(
+            'Check if a joint has been automatically broken by its thresholds.'
+          ),
+          _('Joint _PARAM2_ is broken'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('isJointBroken');
+
+      aut
         .addExpression(
           'JointCount',
           _('Joint count'),
@@ -2534,13 +3644,59 @@ module.exports = {
         .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
         .setFunctionName('getJointCount');
 
+      aut
+        .addExpression(
+          'JointEditorJointId',
+          _('Joint editor joint ID'),
+          _(
+            'Return the active joint ID managed by the Joint Editor GUI on this object (0 if none).'
+          ),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .setFunctionName('getJointEditorJointId');
+
+      aut
+        .addExpression(
+          'JointReactionForce',
+          _('Joint reaction force'),
+          _(
+            'Return last measured reaction force of a joint. Useful for breakable constraints and debugging stability.'
+          ),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getJointReactionForce');
+
+      aut
+        .addExpression(
+          'JointReactionTorque',
+          _('Joint reaction torque'),
+          _(
+            'Return last measured reaction torque of a joint. Useful for breakable constraints and debugging stability.'
+          ),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getJointReactionTorque');
+
       // ==================== Hinge Motor Query Expressions ====================
 
       aut
         .addExpression(
           'HingeJointMotorSpeed',
           _('Hinge joint motor speed'),
-          _('Return the target angular velocity of a hinge joint motor (degrees/second).'),
+          _(
+            'Return the target angular velocity of a hinge joint motor (degrees/second).'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg'
         )
@@ -2575,13 +3731,67 @@ module.exports = {
         .addParameter('expression', _('Joint ID'))
         .setFunctionName('getHingeJointMaxFriction');
 
+      aut
+        .addExpression(
+          'HingeJointMotorMinTorque',
+          _('Hinge motor min torque'),
+          _('Return hinge motor minimum torque limit.'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getHingeJointMotorMinTorque');
+
+      aut
+        .addExpression(
+          'HingeJointMotorMaxTorque',
+          _('Hinge motor max torque'),
+          _('Return hinge motor maximum torque limit.'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getHingeJointMotorMaxTorque');
+
+      aut
+        .addExpression(
+          'HingeJointMotorSpringFrequency',
+          _('Hinge motor spring frequency'),
+          _('Return hinge motor spring frequency.'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getHingeJointMotorSpringFrequency');
+
+      aut
+        .addExpression(
+          'HingeJointMotorSpringDamping',
+          _('Hinge motor spring damping'),
+          _('Return hinge motor spring damping.'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getHingeJointMotorSpringDamping');
+
       // ==================== Slider Motor Query Expressions ====================
 
       aut
         .addExpression(
           'SliderJointMotorSpeed',
           _('Slider joint motor speed'),
-          _('Return the target velocity of a slider joint motor (pixels/second).'),
+          _(
+            'Return the target velocity of a slider joint motor (pixels/second).'
+          ),
           _('Joints'),
           'JsPlatform/Extensions/physics3d.svg'
         )
@@ -2616,6 +3826,58 @@ module.exports = {
         .addParameter('expression', _('Joint ID'))
         .setFunctionName('getSliderJointMaxFriction');
 
+      aut
+        .addExpression(
+          'SliderJointMotorMinForce',
+          _('Slider motor min force'),
+          _('Return slider motor minimum force limit.'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getSliderJointMotorMinForce');
+
+      aut
+        .addExpression(
+          'SliderJointMotorMaxForce',
+          _('Slider motor max force'),
+          _('Return slider motor maximum force limit.'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getSliderJointMotorMaxForce');
+
+      aut
+        .addExpression(
+          'SliderJointMotorSpringFrequency',
+          _('Slider motor spring frequency'),
+          _('Return slider motor spring frequency.'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getSliderJointMotorSpringFrequency');
+
+      aut
+        .addExpression(
+          'SliderJointMotorSpringDamping',
+          _('Slider motor spring damping'),
+          _('Return slider motor spring damping.'),
+          _('Joints'),
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('expression', _('Joint ID'))
+        .setFunctionName('getSliderJointMotorSpringDamping');
+
       // ================================================================
       // ==================== RAGDOLL AUTOMATION SYSTEM ==================
       // ================================================================
@@ -2626,7 +3888,9 @@ module.exports = {
         .addScopedAction(
           'CreateRagdollGroup',
           _('Create ragdoll group'),
-          _('Create a new ragdoll group for batch control of connected bodies and joints.'),
+          _(
+            'Create a new ragdoll group for batch control of connected bodies and joints.'
+          ),
           _('Create ragdoll group and store ID in _PARAM2_'),
           _('Ragdoll'),
           'JsPlatform/Extensions/physics3d.svg',
@@ -2641,7 +3905,9 @@ module.exports = {
         .addScopedAction(
           'AddBodyToRagdollGroup',
           _('Add body to ragdoll group'),
-          _('Add this object\'s physics body to a ragdoll group for batch control.'),
+          _(
+            "Add this object's physics body to a ragdoll group for batch control."
+          ),
           _('Add _PARAM0_ to ragdoll group _PARAM2_'),
           _('Ragdoll'),
           'JsPlatform/Extensions/physics3d.svg',
@@ -2656,7 +3922,9 @@ module.exports = {
         .addScopedAction(
           'AddJointToRagdollGroup',
           _('Add joint to ragdoll group'),
-          _('Register an existing joint with a ragdoll group for batch control.'),
+          _(
+            'Register an existing joint with a ragdoll group for batch control.'
+          ),
           _('Add joint _PARAM3_ to ragdoll group _PARAM2_'),
           _('Ragdoll'),
           'JsPlatform/Extensions/physics3d.svg',
@@ -2689,7 +3957,9 @@ module.exports = {
         .addScopedAction(
           'SetRagdollMode',
           _('Set ragdoll mode'),
-          _('Switch all bodies in a ragdoll between Dynamic (physics) and Kinematic (animation) mode.'),
+          _(
+            'Switch all bodies in a ragdoll between Dynamic (physics) and Kinematic (animation) mode.'
+          ),
           _('Set ragdoll _PARAM2_ mode to _PARAM3_'),
           _('Ragdoll'),
           'JsPlatform/Extensions/physics3d.svg',
@@ -2710,7 +3980,9 @@ module.exports = {
         .addScopedAction(
           'SetRagdollState',
           _('Set ragdoll state'),
-          _('Set a preset ragdoll state: Active (normal physics), Limp (floppy ragdoll), Stiff (muscle tension), Frozen (kinematic).'),
+          _(
+            'Set a preset ragdoll state: Active (normal physics), Limp (floppy ragdoll), Stiff (muscle tension), Frozen (kinematic).'
+          ),
           _('Set ragdoll _PARAM2_ state to _PARAM3_'),
           _('Ragdoll'),
           'JsPlatform/Extensions/physics3d.svg',
@@ -2734,7 +4006,9 @@ module.exports = {
           'SetRagdollDamping',
           _('Set ragdoll damping'),
           _('Set linear and angular damping on ALL bodies in a ragdoll group.'),
-          _('Set ragdoll _PARAM2_ damping (linear: _PARAM3_, angular: _PARAM4_)'),
+          _(
+            'Set ragdoll _PARAM2_ damping (linear: _PARAM3_, angular: _PARAM4_)'
+          ),
           _('Ragdoll'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -2750,8 +4024,12 @@ module.exports = {
         .addScopedAction(
           'SetRagdollStiffness',
           _('Set ragdoll stiffness'),
-          _('Set spring stiffness on ALL joints in a ragdoll group (simulates muscle tension).'),
-          _('Set ragdoll _PARAM2_ stiffness (frequency: _PARAM3_, damping: _PARAM4_)'),
+          _(
+            'Set spring stiffness on ALL joints in a ragdoll group (simulates muscle tension).'
+          ),
+          _(
+            'Set ragdoll _PARAM2_ stiffness (frequency: _PARAM3_, damping: _PARAM4_)'
+          ),
           _('Ragdoll'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -2783,7 +4061,9 @@ module.exports = {
         .addScopedAction(
           'ApplyRagdollImpulse',
           _('Apply ragdoll impulse'),
-          _('Apply an impulse to ALL bodies in a ragdoll group (explosions, hits, knockbacks).'),
+          _(
+            'Apply an impulse to ALL bodies in a ragdoll group (explosions, hits, knockbacks).'
+          ),
           _('Apply impulse (_PARAM3_, _PARAM4_, _PARAM5_) to ragdoll _PARAM2_'),
           _('Ragdoll'),
           'JsPlatform/Extensions/physics3d.svg',
@@ -2801,7 +4081,9 @@ module.exports = {
         .addScopedAction(
           'SetRagdollGravityScale',
           _('Set ragdoll gravity scale'),
-          _('Set gravity scale on ALL bodies in a ragdoll (0 = zero gravity, 1 = normal, 2 = double gravity).'),
+          _(
+            'Set gravity scale on ALL bodies in a ragdoll (0 = zero gravity, 1 = normal, 2 = double gravity).'
+          ),
           _('Set ragdoll _PARAM2_ gravity scale to _PARAM3_'),
           _('Ragdoll'),
           'JsPlatform/Extensions/physics3d.svg',
@@ -2847,7 +4129,9 @@ module.exports = {
         .addExpression(
           'JointWorldX',
           _('Joint world X position'),
-          _('Return the world X position of a joint (midpoint of connected bodies, in pixels).'),
+          _(
+            'Return the world X position of a joint (midpoint of connected bodies, in pixels).'
+          ),
           _('Ragdoll'),
           'JsPlatform/Extensions/physics3d.svg'
         )
@@ -2860,7 +4144,9 @@ module.exports = {
         .addExpression(
           'JointWorldY',
           _('Joint world Y position'),
-          _('Return the world Y position of a joint (midpoint of connected bodies, in pixels).'),
+          _(
+            'Return the world Y position of a joint (midpoint of connected bodies, in pixels).'
+          ),
           _('Ragdoll'),
           'JsPlatform/Extensions/physics3d.svg'
         )
@@ -2873,7 +4159,9 @@ module.exports = {
         .addExpression(
           'JointWorldZ',
           _('Joint world Z position'),
-          _('Return the world Z position of a joint (midpoint of connected bodies, in pixels).'),
+          _(
+            'Return the world Z position of a joint (midpoint of connected bodies, in pixels).'
+          ),
           _('Ragdoll'),
           'JsPlatform/Extensions/physics3d.svg'
         )
@@ -2888,8 +4176,12 @@ module.exports = {
         .addScopedAction(
           'BuildHumanoidRagdoll',
           _('Build humanoid ragdoll'),
-          _('Automatically build a complete humanoid ragdoll from 11 body-part objects with proper joint types and weight distribution.'),
-          _('Build humanoid ragdoll from _PARAM2_ body parts, store ID in _PARAM13_'),
+          _(
+            'Automatically build a complete humanoid ragdoll from 11 body-part objects with proper joint types and weight distribution.'
+          ),
+          _(
+            'Build humanoid ragdoll from _PARAM2_ body parts, store ID in _PARAM13_'
+          ),
           _('Ragdoll'),
           'JsPlatform/Extensions/physics3d.svg',
           'JsPlatform/Extensions/physics3d.svg'
@@ -2909,7 +4201,284 @@ module.exports = {
         .addParameter('objectPtr', _('Shin Right'))
         .addParameter('scenevar', _('Variable to store ragdoll ID'))
         .setFunctionName('buildHumanoidRagdoll');
+
+      aut
+        .addScopedAction(
+          'BuildHumanoidRagdollFromTag',
+          _('Build humanoid ragdoll from tag'),
+          _(
+            'Automatically find body parts by their ragdoll role and shared group tag, then build one humanoid ragdoll.'
+          ),
+          _(
+            'Build humanoid ragdoll for group tag _PARAM2_ and store ID in _PARAM3_'
+          ),
+          _('Ragdoll'),
+          'JsPlatform/Extensions/physics3d.svg',
+          'JsPlatform/Extensions/physics3d.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+        .addParameter('string', _('Ragdoll group tag'))
+        .addParameter('scenevar', _('Variable to store ragdoll ID'))
+        .setFunctionName('buildHumanoidRagdollFromTag');
     }
+    // Bulk joints
+    extension
+      .addAction(
+        'AddFixedJointsBetweenObjects',
+        _('Link fixed joints to all picked objects'),
+        _(
+          'Create fixed joints between each picked source object and each picked target object.'
+        ),
+        _(
+          'Link fixed joints between _PARAM0_ and _PARAM2_ (linked pairs: _PARAM3_, last joint ID: _PARAM4_)'
+        ),
+        _('Joints'),
+        'JsPlatform/Extensions/physics3d.svg',
+        'JsPlatform/Extensions/physics3d.svg'
+      )
+      .addParameter('objectList', _('Source objects'), '', false)
+      .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+      .addParameter('objectList', _('Target objects'), '', false)
+      .addParameter('scenevar', _('Variable to store linked pairs count'))
+      .addParameter('scenevar', _('Variable to store last joint ID'))
+      .getCodeExtraInformation()
+      .addIncludeFile('Extensions/Physics3DBehavior/Physics3DTools.js')
+      .addIncludeFile(
+        'Extensions/Physics3DBehavior/Physics3DRuntimeBehavior.js'
+      )
+      .setFunctionName('gdjs.physics3d.addFixedJointsBetweenObjects');
+
+    extension
+      .addAction(
+        'AddPointJointsBetweenObjects',
+        _('Link point joints to all picked objects'),
+        _(
+          'Create point joints between each picked source object and each picked target object.'
+        ),
+        _(
+          'Link point joints between _PARAM0_ and _PARAM2_ at _PARAM3_;_PARAM4_;_PARAM5_ (linked pairs: _PARAM6_, last joint ID: _PARAM7_)'
+        ),
+        _('Joints'),
+        'JsPlatform/Extensions/physics3d.svg',
+        'JsPlatform/Extensions/physics3d.svg'
+      )
+      .addParameter('objectList', _('Source objects'), '', false)
+      .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+      .addParameter('objectList', _('Target objects'), '', false)
+      .addParameter('expression', _('Joint position X'))
+      .addParameter('expression', _('Joint position Y'))
+      .addParameter('expression', _('Joint position Z'))
+      .addParameter('scenevar', _('Variable to store linked pairs count'))
+      .addParameter('scenevar', _('Variable to store last joint ID'))
+      .getCodeExtraInformation()
+      .addIncludeFile('Extensions/Physics3DBehavior/Physics3DTools.js')
+      .addIncludeFile(
+        'Extensions/Physics3DBehavior/Physics3DRuntimeBehavior.js'
+      )
+      .setFunctionName('gdjs.physics3d.addPointJointsBetweenObjects');
+
+    extension
+      .addAction(
+        'AddHingeJointsBetweenObjects',
+        _('Link hinge joints to all picked objects'),
+        _(
+          'Create hinge joints between each picked source object and each picked target object.'
+        ),
+        _(
+          'Link hinge joints between _PARAM0_ and _PARAM2_ at _PARAM3_;_PARAM4_;_PARAM5_ on axis _PARAM6_;_PARAM7_;_PARAM8_ (linked pairs: _PARAM9_, last joint ID: _PARAM10_)'
+        ),
+        _('Joints'),
+        'JsPlatform/Extensions/physics3d.svg',
+        'JsPlatform/Extensions/physics3d.svg'
+      )
+      .addParameter('objectList', _('Source objects'), '', false)
+      .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+      .addParameter('objectList', _('Target objects'), '', false)
+      .addParameter('expression', _('Joint position X'))
+      .addParameter('expression', _('Joint position Y'))
+      .addParameter('expression', _('Joint position Z'))
+      .addParameter('expression', _('Axis X'))
+      .addParameter('expression', _('Axis Y'))
+      .addParameter('expression', _('Axis Z'))
+      .addParameter('scenevar', _('Variable to store linked pairs count'))
+      .addParameter('scenevar', _('Variable to store last joint ID'))
+      .getCodeExtraInformation()
+      .addIncludeFile('Extensions/Physics3DBehavior/Physics3DTools.js')
+      .addIncludeFile(
+        'Extensions/Physics3DBehavior/Physics3DRuntimeBehavior.js'
+      )
+      .setFunctionName('gdjs.physics3d.addHingeJointsBetweenObjects');
+
+    extension
+      .addAction(
+        'AddSliderJointsBetweenObjects',
+        _('Link slider joints to all picked objects'),
+        _(
+          'Create slider joints between each picked source object and each picked target object.'
+        ),
+        _(
+          'Link slider joints between _PARAM0_ and _PARAM2_ on axis _PARAM3_;_PARAM4_;_PARAM5_ (linked pairs: _PARAM6_, last joint ID: _PARAM7_)'
+        ),
+        _('Joints'),
+        'JsPlatform/Extensions/physics3d.svg',
+        'JsPlatform/Extensions/physics3d.svg'
+      )
+      .addParameter('objectList', _('Source objects'), '', false)
+      .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+      .addParameter('objectList', _('Target objects'), '', false)
+      .addParameter('expression', _('Axis X'))
+      .addParameter('expression', _('Axis Y'))
+      .addParameter('expression', _('Axis Z'))
+      .addParameter('scenevar', _('Variable to store linked pairs count'))
+      .addParameter('scenevar', _('Variable to store last joint ID'))
+      .getCodeExtraInformation()
+      .addIncludeFile('Extensions/Physics3DBehavior/Physics3DTools.js')
+      .addIncludeFile(
+        'Extensions/Physics3DBehavior/Physics3DRuntimeBehavior.js'
+      )
+      .setFunctionName('gdjs.physics3d.addSliderJointsBetweenObjects');
+
+    extension
+      .addAction(
+        'AddDistanceJointsBetweenObjects',
+        _('Link distance joints to all picked objects'),
+        _(
+          'Create distance joints between each picked source object and each picked target object.'
+        ),
+        _(
+          'Link distance joints between _PARAM0_ and _PARAM2_ (min: _PARAM3_, max: _PARAM4_, spring: _PARAM5_, damping: _PARAM6_) (linked pairs: _PARAM7_, last joint ID: _PARAM8_)'
+        ),
+        _('Joints'),
+        'JsPlatform/Extensions/physics3d.svg',
+        'JsPlatform/Extensions/physics3d.svg'
+      )
+      .addParameter('objectList', _('Source objects'), '', false)
+      .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+      .addParameter('objectList', _('Target objects'), '', false)
+      .addParameter('expression', _('Minimum distance (pixels)'))
+      .addParameter('expression', _('Maximum distance (pixels)'))
+      .addParameter('expression', _('Spring frequency (0 to disable)'))
+      .addParameter('expression', _('Spring damping ratio'))
+      .addParameter('scenevar', _('Variable to store linked pairs count'))
+      .addParameter('scenevar', _('Variable to store last joint ID'))
+      .getCodeExtraInformation()
+      .addIncludeFile('Extensions/Physics3DBehavior/Physics3DTools.js')
+      .addIncludeFile(
+        'Extensions/Physics3DBehavior/Physics3DRuntimeBehavior.js'
+      )
+      .setFunctionName('gdjs.physics3d.addDistanceJointsBetweenObjects');
+
+    extension
+      .addAction(
+        'AddPulleyJointsBetweenObjects',
+        _('Link pulley joints to all picked objects'),
+        _(
+          'Create pulley joints between each picked source object and each picked target object.'
+        ),
+        _(
+          'Link pulley joints between _PARAM0_ and _PARAM2_ (total length: _PARAM15_, ratio: _PARAM16_, enabled: _PARAM17_) (linked pairs: _PARAM18_, last joint ID: _PARAM19_)'
+        ),
+        _('Joints'),
+        'JsPlatform/Extensions/physics3d.svg',
+        'JsPlatform/Extensions/physics3d.svg'
+      )
+      .addParameter('objectList', _('Source objects'), '', false)
+      .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+      .addParameter('objectList', _('Target objects'), '', false)
+      .addParameter('expression', _('Pulley anchor A X (world, pixels)'))
+      .addParameter('expression', _('Pulley anchor A Y (world, pixels)'))
+      .addParameter('expression', _('Pulley anchor A Z (world, pixels)'))
+      .addParameter('expression', _('Pulley anchor B X (world, pixels)'))
+      .addParameter('expression', _('Pulley anchor B Y (world, pixels)'))
+      .addParameter('expression', _('Pulley anchor B Z (world, pixels)'))
+      .addParameter('expression', _('Local anchor A X (pixels)'))
+      .addParameter('expression', _('Local anchor A Y (pixels)'))
+      .addParameter('expression', _('Local anchor A Z (pixels)'))
+      .addParameter('expression', _('Local anchor B X (pixels)'))
+      .addParameter('expression', _('Local anchor B Y (pixels)'))
+      .addParameter('expression', _('Local anchor B Z (pixels)'))
+      .addParameter('expression', _('Total rope length (pixels)'))
+      .addParameter('expression', _('Pulley ratio (default 1.0)'))
+      .addParameter('yesorno', _('Enable joint'), '', false)
+      .addParameter('scenevar', _('Variable to store linked pairs count'))
+      .addParameter('scenevar', _('Variable to store last joint ID'))
+      .getCodeExtraInformation()
+      .addIncludeFile('Extensions/Physics3DBehavior/Physics3DTools.js')
+      .addIncludeFile(
+        'Extensions/Physics3DBehavior/Physics3DRuntimeBehavior.js'
+      )
+      .setFunctionName('gdjs.physics3d.addPulleyJointsBetweenObjects');
+
+    extension
+      .addAction(
+        'AddConeJointsBetweenObjects',
+        _('Link cone joints to all picked objects'),
+        _(
+          'Create cone joints between each picked source object and each picked target object.'
+        ),
+        _(
+          'Link cone joints between _PARAM0_ and _PARAM2_ at _PARAM3_;_PARAM4_;_PARAM5_ (axis _PARAM6_;_PARAM7_;_PARAM8_, angle _PARAM9_°) (linked pairs: _PARAM10_, last joint ID: _PARAM11_)'
+        ),
+        _('Joints'),
+        'JsPlatform/Extensions/physics3d.svg',
+        'JsPlatform/Extensions/physics3d.svg'
+      )
+      .addParameter('objectList', _('Source objects'), '', false)
+      .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+      .addParameter('objectList', _('Target objects'), '', false)
+      .addParameter('expression', _('Joint position X'))
+      .addParameter('expression', _('Joint position Y'))
+      .addParameter('expression', _('Joint position Z'))
+      .addParameter('expression', _('Twist axis X'))
+      .addParameter('expression', _('Twist axis Y'))
+      .addParameter('expression', _('Twist axis Z'))
+      .addParameter('expression', _('Half cone angle (degrees)'))
+      .addParameter('scenevar', _('Variable to store linked pairs count'))
+      .addParameter('scenevar', _('Variable to store last joint ID'))
+      .getCodeExtraInformation()
+      .addIncludeFile('Extensions/Physics3DBehavior/Physics3DTools.js')
+      .addIncludeFile(
+        'Extensions/Physics3DBehavior/Physics3DRuntimeBehavior.js'
+      )
+      .setFunctionName('gdjs.physics3d.addConeJointsBetweenObjects');
+
+    extension
+      .addAction(
+        'AddSwingTwistJointsBetweenObjects',
+        _('Link SwingTwist joints to all picked objects'),
+        _(
+          'Create SwingTwist joints between each picked source object and each picked target object.'
+        ),
+        _(
+          'Link SwingTwist joints between _PARAM0_ and _PARAM2_ at _PARAM3_;_PARAM4_;_PARAM5_ (linked pairs: _PARAM13_, last joint ID: _PARAM14_)'
+        ),
+        _('Joints'),
+        'JsPlatform/Extensions/physics3d.svg',
+        'JsPlatform/Extensions/physics3d.svg'
+      )
+      .addParameter('objectList', _('Source objects'), '', false)
+      .addParameter('behavior', _('Behavior'), 'Physics3DBehavior')
+      .addParameter('objectList', _('Target objects'), '', false)
+      .addParameter('expression', _('Anchor X (pixels)'))
+      .addParameter('expression', _('Anchor Y (pixels)'))
+      .addParameter('expression', _('Anchor Z (pixels)'))
+      .addParameter('expression', _('Twist axis X'))
+      .addParameter('expression', _('Twist axis Y'))
+      .addParameter('expression', _('Twist axis Z'))
+      .addParameter('expression', _('Normal half cone angle (degrees)'))
+      .addParameter('expression', _('Plane half cone angle (degrees)'))
+      .addParameter('expression', _('Twist min angle (degrees)'))
+      .addParameter('expression', _('Twist max angle (degrees)'))
+      .addParameter('scenevar', _('Variable to store linked pairs count'))
+      .addParameter('scenevar', _('Variable to store last joint ID'))
+      .getCodeExtraInformation()
+      .addIncludeFile('Extensions/Physics3DBehavior/Physics3DTools.js')
+      .addIncludeFile(
+        'Extensions/Physics3DBehavior/Physics3DRuntimeBehavior.js'
+      )
+      .setFunctionName('gdjs.physics3d.addSwingTwistJointsBetweenObjects');
+
     // Collision
     extension
       .addCondition(

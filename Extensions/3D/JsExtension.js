@@ -252,6 +252,289 @@ module.exports = {
     }
 
     {
+      const behavior = new gd.BehaviorJsImplementation();
+
+      behavior.updateProperty = function (
+        behaviorContent,
+        propertyName,
+        newValue
+      ) {
+        if (!behaviorContent.hasChild(propertyName)) {
+          if (propertyName === 'enabled') {
+            behaviorContent.addChild(propertyName).setBoolValue(true);
+          } else {
+            behaviorContent.addChild(propertyName).setDoubleValue(0);
+          }
+        }
+
+        if (propertyName === 'enabled') {
+          behaviorContent
+            .getChild('enabled')
+            .setBoolValue(newValue === '1' || newValue === 'true');
+          return true;
+        }
+
+        if (
+          propertyName === 'baseIntensity' ||
+          propertyName === 'flickerSpeed' ||
+          propertyName === 'flickerStrength' ||
+          propertyName === 'failChance' ||
+          propertyName === 'offDuration'
+        ) {
+          const value = parseFloat(newValue);
+          if (value !== value) {
+            return false;
+          }
+          behaviorContent
+            .getChild(propertyName)
+            .setDoubleValue(Math.max(0, value));
+          return true;
+        }
+
+        return false;
+      };
+
+      behavior.getProperties = function (behaviorContent) {
+        const behaviorProperties = new gd.MapStringPropertyDescriptor();
+
+        if (!behaviorContent.hasChild('enabled')) {
+          behaviorContent.addChild('enabled').setBoolValue(true);
+        }
+        if (!behaviorContent.hasChild('baseIntensity')) {
+          behaviorContent.addChild('baseIntensity').setDoubleValue(1.0);
+        }
+        if (!behaviorContent.hasChild('flickerSpeed')) {
+          behaviorContent.addChild('flickerSpeed').setDoubleValue(10.0);
+        }
+        if (!behaviorContent.hasChild('flickerStrength')) {
+          behaviorContent.addChild('flickerStrength').setDoubleValue(0.4);
+        }
+        if (!behaviorContent.hasChild('failChance')) {
+          behaviorContent.addChild('failChance').setDoubleValue(0.02);
+        }
+        if (!behaviorContent.hasChild('offDuration')) {
+          behaviorContent.addChild('offDuration').setDoubleValue(0.1);
+        }
+
+        behaviorProperties
+          .getOrCreate('enabled')
+          .setValue(
+            behaviorContent.getChild('enabled').getBoolValue()
+              ? 'true'
+              : 'false'
+          )
+          .setType('Boolean')
+          .setLabel(_('Enabled'));
+        behaviorProperties
+          .getOrCreate('baseIntensity')
+          .setValue(
+            behaviorContent
+              .getChild('baseIntensity')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Base intensity'));
+        behaviorProperties
+          .getOrCreate('flickerSpeed')
+          .setValue(
+            behaviorContent
+              .getChild('flickerSpeed')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Flicker speed'));
+        behaviorProperties
+          .getOrCreate('flickerStrength')
+          .setValue(
+            behaviorContent
+              .getChild('flickerStrength')
+              .getDoubleValue()
+              .toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Flicker strength'));
+        behaviorProperties
+          .getOrCreate('failChance')
+          .setValue(
+            behaviorContent.getChild('failChance').getDoubleValue().toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Failure chance (per second)'));
+        behaviorProperties
+          .getOrCreate('offDuration')
+          .setValue(
+            behaviorContent.getChild('offDuration').getDoubleValue().toString(10)
+          )
+          .setType('Number')
+          .setLabel(_('Off duration (seconds)'));
+
+        return behaviorProperties;
+      };
+
+      behavior.initializeContent = function (behaviorContent) {
+        behaviorContent.addChild('enabled').setBoolValue(true);
+        behaviorContent.addChild('baseIntensity').setDoubleValue(1.0);
+        behaviorContent.addChild('flickerSpeed').setDoubleValue(10.0);
+        behaviorContent.addChild('flickerStrength').setDoubleValue(0.4);
+        behaviorContent.addChild('failChance').setDoubleValue(0.02);
+        behaviorContent.addChild('offDuration').setDoubleValue(0.1);
+      };
+
+      const flickeringLight = extension
+        .addBehavior(
+          'FlickeringLight',
+          _('Flickering 3D light'),
+          'FlickeringLight',
+          _(
+            'Randomly flickers Scene3D Point Light and Spot Light effects by updating their intensity every frame.'
+          ),
+          '',
+          'res/conditions/3d_box.svg',
+          'FlickeringLight',
+          // @ts-ignore
+          behavior,
+          new gd.BehaviorsSharedData()
+        )
+        .setIncludeFile('Extensions/3D/FlickeringLightBehavior.js');
+
+      flickeringLight
+        .addScopedAction(
+          'SetEnabled',
+          _('Enable/disable flickering'),
+          _('Enable or disable the light flicker simulation.'),
+          _('Set flickering of _PARAM0_ to _PARAM2_'),
+          _('Flickering light'),
+          'res/conditions/3d_box.svg',
+          'res/conditions/3d_box.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'FlickeringLight')
+        .addParameter('yesorno', _('Enabled'))
+        .setFunctionName('setEnabled');
+
+      flickeringLight
+        .addScopedCondition(
+          'IsEnabled',
+          _('Flickering enabled'),
+          _('Check if the flickering logic is enabled.'),
+          _('Flickering is enabled for _PARAM0_'),
+          _('Flickering light'),
+          'res/conditions/3d_box.svg',
+          'res/conditions/3d_box.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'FlickeringLight')
+        .setFunctionName('isEnabled');
+
+      flickeringLight
+        .addExpressionAndConditionAndAction(
+          'number',
+          'BaseIntensity',
+          _('Base intensity'),
+          _('the base light intensity'),
+          _('the base intensity'),
+          _('Flickering light'),
+          'res/conditions/3d_box.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'FlickeringLight')
+        .useStandardParameters(
+          'number',
+          gd.ParameterOptions.makeNewOptions().setDescription(
+            _('Base intensity used when flicker offset is 0.')
+          )
+        )
+        .setFunctionName('setBaseIntensity')
+        .setGetter('getBaseIntensity');
+
+      flickeringLight
+        .addExpressionAndConditionAndAction(
+          'number',
+          'FlickerSpeed',
+          _('Flicker speed'),
+          _('the flickering speed'),
+          _('the flicker speed'),
+          _('Flickering light'),
+          'res/conditions/3d_box.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'FlickeringLight')
+        .useStandardParameters(
+          'number',
+          gd.ParameterOptions.makeNewOptions().setDescription(
+            _('How fast the flicker oscillates.')
+          )
+        )
+        .setFunctionName('setFlickerSpeed')
+        .setGetter('getFlickerSpeed');
+
+      flickeringLight
+        .addExpressionAndConditionAndAction(
+          'number',
+          'FlickerStrength',
+          _('Flicker strength'),
+          _('the flicker strength'),
+          _('the flicker strength'),
+          _('Flickering light'),
+          'res/conditions/3d_box.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'FlickeringLight')
+        .useStandardParameters(
+          'number',
+          gd.ParameterOptions.makeNewOptions().setDescription(
+            _('How much intensity can vary around the base value.')
+          )
+        )
+        .setFunctionName('setFlickerStrength')
+        .setGetter('getFlickerStrength');
+
+      flickeringLight
+        .addExpressionAndConditionAndAction(
+          'number',
+          'FailChance',
+          _('Failure chance'),
+          _('the failure chance per second'),
+          _('the failure chance per second'),
+          _('Flickering light'),
+          'res/conditions/3d_box.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'FlickeringLight')
+        .useStandardParameters(
+          'number',
+          gd.ParameterOptions.makeNewOptions().setDescription(
+            _('Probability per second for a complete temporary blackout.')
+          )
+        )
+        .setFunctionName('setFailChance')
+        .setGetter('getFailChance');
+
+      flickeringLight
+        .addExpressionAndConditionAndAction(
+          'number',
+          'OffDuration',
+          _('Off duration'),
+          _('the off duration in seconds'),
+          _('the off duration'),
+          _('Flickering light'),
+          'res/conditions/3d_box.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'FlickeringLight')
+        .useStandardParameters(
+          'number',
+          gd.ParameterOptions.makeNewOptions().setDescription(
+            _('How long the light stays off when a failure occurs (seconds).')
+          )
+        )
+        .setFunctionName('setOffDuration')
+        .setGetter('getOffDuration');
+    }
+
+    {
       const object = extension
         .addObject(
           'Model3DObject',
@@ -2730,6 +3013,96 @@ module.exports = {
         .setType('number')
         .setMeasurementUnit(gd.MeasurementUnit.getPixel())
         .setDescription(_('Depth tolerance to detect reflection hits reliably.'));
+    }
+    {
+      const effect = extension
+        .addEffect('ChromaticAberration')
+        .setFullName(_('Chromatic aberration'))
+        .setDescription(
+          _(
+            'Lens-like RGB channel separation that gets stronger toward screen edges.'
+          )
+        )
+        .markAsNotWorkingForObjects()
+        .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/PostProcessingSharedResources.js')
+        .addIncludeFile('Extensions/3D/ChromaticAberrationEffect.js');
+      const properties = effect.getProperties();
+      properties
+        .getOrCreate('enabled')
+        .setValue('true')
+        .setLabel(_('Enabled'))
+        .setType('boolean');
+      properties
+        .getOrCreate('intensity')
+        .setValue('0.005')
+        .setLabel(_('Intensity'))
+        .setType('number')
+        .setDescription(
+          _('How far red/blue channels split from the center direction.')
+        );
+      properties
+        .getOrCreate('radialScale')
+        .setValue('1.0')
+        .setLabel(_('Radial scale'))
+        .setType('number')
+        .setDescription(
+          _('How strongly the effect ramps from center to edges.')
+        );
+    }
+    {
+      const effect = extension
+        .addEffect('ColorGrading')
+        .setFullName(_('Color grading'))
+        .setDescription(
+          _(
+            'Apply cinematic color grading in screen space: temperature, tint, saturation, contrast, and brightness.'
+          )
+        )
+        .markAsNotWorkingForObjects()
+        .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/PostProcessingSharedResources.js')
+        .addIncludeFile('Extensions/3D/ColorGradingEffect.js');
+      const properties = effect.getProperties();
+      properties
+        .getOrCreate('enabled')
+        .setValue('true')
+        .setLabel(_('Enabled'))
+        .setType('boolean');
+      properties
+        .getOrCreate('temperature')
+        .setValue('-0.3')
+        .setLabel(_('Temperature'))
+        .setType('number')
+        .setDescription(
+          _(
+            'Negative = cool blue, positive = warm orange. Default tuned for cold horror mood.'
+          )
+        );
+      properties
+        .getOrCreate('tint')
+        .setValue('-0.1')
+        .setLabel(_('Tint'))
+        .setType('number')
+        .setDescription(_('Negative = greener, positive = magenta.'));
+      properties
+        .getOrCreate('saturation')
+        .setValue('0.8')
+        .setLabel(_('Saturation'))
+        .setType('number')
+        .setDescription(_('0 = grayscale, 1 = normal, >1 = oversaturated.'));
+      properties
+        .getOrCreate('contrast')
+        .setValue('1.2')
+        .setLabel(_('Contrast'))
+        .setType('number')
+        .setDescription(_('1 = neutral, >1 = stronger contrast.'));
+      properties
+        .getOrCreate('brightness')
+        .setValue('0.95')
+        .setLabel(_('Brightness'))
+        .setType('number')
+        .setDescription(_('1 = neutral, <1 darker, >1 brighter.'));
     }
     {
       const effect = extension
