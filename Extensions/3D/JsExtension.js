@@ -2998,6 +2998,45 @@ module.exports = {
     }
     {
       const effect = extension
+        .addEffect('ToneMapping')
+        .setFullName(_('Tone mapping'))
+        .setDescription(
+          _(
+            'Configure renderer tone mapping for a cinematic and physically based 3D look.'
+          )
+        )
+        .markAsNotWorkingForObjects()
+        .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/ToneMappingEffect.js');
+      const properties = effect.getProperties();
+      properties
+        .getOrCreate('enabled')
+        .setValue('true')
+        .setLabel(_('Enabled'))
+        .setType('boolean');
+      properties
+        .getOrCreate('mode')
+        .setValue('ACESFilmic')
+        .addChoice('ACESFilmic', _('ACES Filmic'))
+        .addChoice('Reinhard', _('Reinhard'))
+        .addChoice('Cineon', _('Cineon'))
+        .addChoice('Linear', _('Linear'))
+        .setLabel(_('Mode'))
+        .setType('choice')
+        .setDescription(
+          _(
+            'ACESFilmic for cinematic look, Reinhard for softer highlights, Cineon for film look, Linear for no tone mapping.'
+          )
+        );
+      properties
+        .getOrCreate('exposure')
+        .setValue('1.0')
+        .setLabel(_('Exposure'))
+        .setType('number')
+        .setDescription(_('Brightness multiplier applied by tone mapping.'));
+    }
+    {
+      const effect = extension
         .addEffect('PostProcessingStack')
         .setFullName(_('Post-processing stack'))
         .setDescription(
