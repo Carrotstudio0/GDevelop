@@ -2523,6 +2523,48 @@ module.exports = {
     }
     {
       const effect = extension
+        .addEffect('RimLight')
+        .setFullName(_('Rim light'))
+        .setDescription(
+          _(
+            'Screen-space rim shading pass using depth, camera view and existing scene capture. Includes fog fade and shadow-map suppression.'
+          )
+        )
+        .markAsNotWorkingForObjects()
+        .markAsOnlyWorkingFor3D()
+        .addIncludeFile('Extensions/3D/PostProcessingSharedResources.js')
+        .addIncludeFile('Extensions/3D/RimLight.js');
+      const properties = effect.getProperties();
+      properties
+        .getOrCreate('enabled')
+        .setValue('true')
+        .setLabel(_('Enabled'))
+        .setType('boolean');
+      properties
+        .getOrCreate('color')
+        .setValue('255;255;255')
+        .setLabel(_('Rim color'))
+        .setType('color');
+      properties
+        .getOrCreate('intensity')
+        .setValue('0.8')
+        .setLabel(_('Intensity'))
+        .setDescription(_('Strength of the rim contribution near silhouettes.'))
+        .setType('number');
+      properties
+        .getOrCreate('outerWrap')
+        .setValue('0.18')
+        .setLabel(_('Outer wrap'))
+        .setDescription(
+          _(
+            'Ambient wrap amount for the 45 to 90 degree rim zone away from silhouette.'
+          )
+        )
+        .setType('number')
+        .setAdvanced(true);
+    }
+    {
+      const effect = extension
         .addEffect('HemisphereLight')
         .setFullName(_('Hemisphere light'))
         .setDescription(
