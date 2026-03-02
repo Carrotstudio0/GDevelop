@@ -2317,7 +2317,7 @@ module.exports = {
         .setType('color');
       properties
         .getOrCreate('intensity')
-        .setValue('0.75')
+        .setValue('0.25')
         .setLabel(_('Intensity'))
         .setType('number');
     }
@@ -2395,6 +2395,55 @@ module.exports = {
         .setGroup(_('Shadows'))
         .setAdvanced(true);
       properties
+        .getOrCreate('shadowNormalBias')
+        .setValue('0.02')
+        .setLabel(_('Shadow normal bias'))
+        .setDescription(
+          _(
+            'Offset along normals to reduce acne on sloped/curved surfaces.'
+          )
+        )
+        .setType('number')
+        .setGroup(_('Shadows'))
+        .setAdvanced(true);
+      properties
+        .getOrCreate('shadowRadius')
+        .setValue('2')
+        .setLabel(_('Shadow softness'))
+        .setDescription(
+          _(
+            'Softness radius for filtered shadow edges (higher = softer, may blur details).'
+          )
+        )
+        .setType('number')
+        .setGroup(_('Shadows'))
+        .setAdvanced(true);
+      properties
+        .getOrCreate('shadowStabilization')
+        .setValue('true')
+        .setLabel(_('Shadow stabilization'))
+        .setDescription(
+          _(
+            'Snap shadow tracking to a stable grid to reduce shimmering while the camera moves.'
+          )
+        )
+        .setType('boolean')
+        .setGroup(_('Shadows'))
+        .setAdvanced(true);
+      properties
+        .getOrCreate('shadowStabilizationStep')
+        .setValue('0')
+        .setLabel(_('Stabilization step'))
+        .setDescription(
+          _(
+            'Pixel step used for shadow stabilization. 0 = automatic texel-based step.'
+          )
+        )
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Shadows'))
+        .setAdvanced(true);
+      properties
         .getOrCreate('frustumSize')
         .setValue('4000')
         .setLabel(_('Shadow frustum size'))
@@ -2436,7 +2485,7 @@ module.exports = {
         .setType('color');
       properties
         .getOrCreate('intensity')
-        .setValue('0.5')
+        .setValue('0.35')
         .setLabel(_('Intensity'))
         .setType('number');
       properties
@@ -2611,6 +2660,15 @@ module.exports = {
         .setLabel(_('Shadow normal bias'))
         .setDescription(
           _('Offset along object normals to prevent acne on curved surfaces. Default: 0.02.')
+        )
+        .setType('number')
+        .setGroup(_('Shadows'));
+      properties
+        .getOrCreate('shadowRadius')
+        .setValue('1.5')
+        .setLabel(_('Shadow softness'))
+        .setDescription(
+          _('Softness radius for point-light shadow filtering.')
         )
         .setType('number')
         .setGroup(_('Shadows'));
@@ -2901,6 +2959,24 @@ module.exports = {
         .setType('number')
         .setGroup(_('Shadows'));
       properties
+        .getOrCreate('shadowNormalBias')
+        .setValue('0.02')
+        .setLabel(_('Shadow normal bias'))
+        .setDescription(
+          _('Offset along normals to reduce acne on curved surfaces.')
+        )
+        .setType('number')
+        .setGroup(_('Shadows'));
+      properties
+        .getOrCreate('shadowRadius')
+        .setValue('1.5')
+        .setLabel(_('Shadow softness'))
+        .setDescription(
+          _('Softness radius for spot-light shadow filtering.')
+        )
+        .setType('number')
+        .setGroup(_('Shadows'));
+      properties
         .getOrCreate('shadowNear')
         .setValue('1')
         .setLabel(_('Shadow near'))
@@ -2956,6 +3032,16 @@ module.exports = {
         .setType('resource')
         .addExtraInfo('image')
         .setLabel(_('Back face (Z-)'));
+      properties
+        .getOrCreate('environmentIntensity')
+        .setValue('1.0')
+        .setLabel(_('Environment intensity'))
+        .setType('number')
+        .setDescription(
+          _(
+            'Intensity multiplier used when this skybox drives scene environment lighting.'
+          )
+        );
     }
     {
       const effect = extension

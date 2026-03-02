@@ -16,6 +16,7 @@ namespace gdjs {
     snb: number;
     sn: number;
     sf: number;
+    sr?: number;
     ao?: string;
     ox?: number;
     oy?: number;
@@ -56,6 +57,7 @@ namespace gdjs {
           private _shadowMapSize: float = 1024;
           private _shadowBias: float = -0.001;
           private _shadowNormalBias: float = 0.02;
+          private _shadowRadius: float = 1.5;
           private _shadowNear: float = 1;
           private _shadowFar: float = 10000;
           private _attachedObjectName: string = '';
@@ -110,6 +112,7 @@ namespace gdjs {
             // Configure shadow defaults
             this._light.shadow.bias = this._shadowBias;
             this._light.shadow.normalBias = this._shadowNormalBias;
+            this._light.shadow.radius = this._shadowRadius;
             this._light.shadow.camera.near = this._shadowNear;
             this._light.shadow.camera.far = this._shadowFar;
             this._light.shadow.camera.updateProjectionMatrix();
@@ -138,17 +141,19 @@ namespace gdjs {
             }
             this._shadowCameraDirty = false;
 
-            this._light.shadow.camera.near = this._shadowNear;
+            const safeNear = Math.max(0.01, this._shadowNear);
+            this._shadowNear = safeNear;
             
             // Auto-adjust far plane if distance is explicitly set
             const effectiveFar = (this._distance > 0) ? 
-                Math.min(this._shadowFar, this._distance + 100) : 
+                Math.min(this._shadowFar, this._distance + Math.max(50, this._distance * 0.25)) : 
                 this._shadowFar;
             
-            this._light.shadow.camera.far = effectiveFar;
+            this._light.shadow.camera.near = safeNear;
+            this._light.shadow.camera.far = Math.max(safeNear + 1, effectiveFar);
             
             // FOV of shadow camera for SpotLight should match the light's angle (angle is half of fov)
-            this._light.shadow.camera.fov = this._angle * 2;
+            this._light.shadow.camera.fov = Math.max(2, Math.min(170, this._angle * 2));
             
             this._light.shadow.camera.updateProjectionMatrix();
           }
@@ -446,16 +451,19 @@ namespace gdjs {
             ) {
               this._updateTarget();
             }
-            this._updateShadowCamera();
-            this._updateShadowMapSize();
 
-            this._light.shadow.bias = this._shadowBias;
-            this._light.shadow.normalBias = this._shadowNormalBias;
+            if (this._light.castShadow) {
+              this._updateShadowCamera();
+              this._updateShadowMapSize();
+              this._light.shadow.bias = this._shadowBias;
+              this._light.shadow.normalBias = this._shadowNormalBias;
+              this._light.shadow.radius = this._shadowRadius;
+            }
             this._updatePhysicsBounce(target);
           }
           updateDoubleParameter(parameterName: string, value: number): void {
             if (parameterName === 'intensity') {
-              this._light.intensity = value;
+              this._light.intensity = Math.max(0, value);
             } else if (parameterName === 'positionX') {
               this._positionX = value;
               this._updatePosition();
@@ -487,28 +495,30 @@ namespace gdjs {
             } else if (parameterName === 'targetAttachedOffsetZ') {
               this._targetAttachedOffsetZ = value;
             } else if (parameterName === 'distance') {
-              this._distance = value;
-              this._light.distance = value;
+              this._distance = Math.max(0, value);
+              this._light.distance = this._distance;
               this._shadowCameraDirty = true;
             } else if (parameterName === 'angle') {
-              this._angle = value;
-              this._light.angle = gdjs.toRad(value);
+              this._angle = Math.max(1, Math.min(85, value));
+              this._light.angle = gdjs.toRad(this._angle);
               this._shadowCameraDirty = true;
             } else if (parameterName === 'penumbra') {
-              this._penumbra = value;
-              this._light.penumbra = value;
+              this._penumbra = gdjs.evtTools.common.clamp(0, 1, value);
+              this._light.penumbra = this._penumbra;
             } else if (parameterName === 'decay') {
-              this._decay = value;
-              this._light.decay = value;
+              this._decay = Math.max(0, value);
+              this._light.decay = this._decay;
             } else if (parameterName === 'shadowBias') {
-              this._shadowBias = -value;
+              this._shadowBias = -Math.max(0, value);
             } else if (parameterName === 'shadowNormalBias') {
-              this._shadowNormalBias = value;
+              this._shadowNormalBias = Math.max(0, value);
+            } else if (parameterName === 'shadowRadius') {
+              this._shadowRadius = Math.max(0, value);
             } else if (parameterName === 'shadowNear') {
-              this._shadowNear = value;
+              this._shadowNear = Math.max(0.01, value);
               this._shadowCameraDirty = true;
             } else if (parameterName === 'shadowFar') {
-              this._shadowFar = value;
+              this._shadowFar = Math.max(this._shadowNear + 1, value);
               this._shadowCameraDirty = true;
             } else if (parameterName === 'physicsBounceIntensityScale') {
               this._physicsBounceIntensityScale = value;
@@ -557,6 +567,8 @@ namespace gdjs {
               return -this._shadowBias;
             } else if (parameterName === 'shadowNormalBias') {
               return this._shadowNormalBias;
+            } else if (parameterName === 'shadowRadius') {
+              return this._shadowRadius;
             } else if (parameterName === 'shadowNear') {
               return this._shadowNear;
             } else if (parameterName === 'shadowFar') {
@@ -616,6 +628,10 @@ namespace gdjs {
           updateBooleanParameter(parameterName: string, value: boolean): void {
             if (parameterName === 'isCastingShadow') {
               this._light.castShadow = value;
+              if (value) {
+                this._shadowMapDirty = true;
+                this._shadowCameraDirty = true;
+              }
             } else if (parameterName === 'rotateOffsetsWithObjectAngle') {
               this._rotateOffsetsWithObjectAngle = value;
             } else if (parameterName === 'physicsBounceEnabled') {
@@ -646,6 +662,7 @@ namespace gdjs {
               snb: this._shadowNormalBias,
               sn: this._shadowNear,
               sf: this._shadowFar,
+              sr: this._shadowRadius,
               ao: this._attachedObjectName,
               ox: this._attachedOffsetX,
               oy: this._attachedOffsetY,
@@ -673,14 +690,15 @@ namespace gdjs {
             this._targetX = syncData.tx;
             this._targetY = syncData.ty;
             this._targetZ = syncData.tz;
-            this._distance = syncData.d;
-            this._angle = syncData.a;
-            this._penumbra = syncData.p;
-            this._decay = syncData.dc;
-            this._shadowBias = syncData.sb;
-            this._shadowNormalBias = syncData.snb;
-            this._shadowNear = syncData.sn;
-            this._shadowFar = syncData.sf;
+            this._distance = Math.max(0, syncData.d);
+            this._angle = Math.max(1, Math.min(85, syncData.a));
+            this._penumbra = gdjs.evtTools.common.clamp(0, 1, syncData.p);
+            this._decay = Math.max(0, syncData.dc);
+            this._shadowBias = syncData.sb ?? -0.001;
+            this._shadowNormalBias = Math.max(0, syncData.snb ?? 0.02);
+            this._shadowNear = Math.max(0.01, syncData.sn ?? 1);
+            this._shadowFar = Math.max(this._shadowNear + 1, syncData.sf ?? 10000);
+            this._shadowRadius = Math.max(0, syncData.sr ?? 1.5);
             this._attachedObjectName = syncData.ao || '';
             this._attachedOffsetX = syncData.ox ?? 0;
             this._attachedOffsetY = syncData.oy ?? 0;
@@ -695,16 +713,17 @@ namespace gdjs {
             this._physicsBounceDistance = syncData.pbd ?? 600;
             this._physicsBounceOriginOffset = syncData.pbo ?? 2;
             this._physicsBounceCastShadow = syncData.pbcs ?? false;
-            this._light.distance = syncData.d;
-            this._light.angle = gdjs.toRad(syncData.a);
-            this._light.penumbra = syncData.p;
-            this._light.decay = syncData.dc;
+            this._light.distance = this._distance;
+            this._light.angle = gdjs.toRad(this._angle);
+            this._light.penumbra = this._penumbra;
+            this._light.decay = this._decay;
             this._bounceLight.castShadow = this._physicsBounceCastShadow;
             if (!this._physicsBounceEnabled) {
               this._hideBounceLight();
             }
             this._updatePosition();
             this._updateTarget();
+            this._shadowMapDirty = true;
             this._shadowCameraDirty = true;
           }
         })();
