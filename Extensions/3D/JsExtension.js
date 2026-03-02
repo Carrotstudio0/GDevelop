@@ -2383,6 +2383,18 @@ module.exports = {
         .setType('choice')
         .setGroup(_('Shadows'));
       properties
+        .getOrCreate('shadowMapSize')
+        .setValue('1024')
+        .setLabel(_('Shadow map size (base)'))
+        .setDescription(
+          _(
+            'Base map size used by cascaded shadows. Recommended values: 512, 1024, or 2048.'
+          )
+        )
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Shadows'));
+      properties
         .getOrCreate('minimumShadowBias')
         .setValue('0')
         .setLabel(_('Shadow bias'))
@@ -2431,6 +2443,18 @@ module.exports = {
         .setGroup(_('Shadows'))
         .setAdvanced(true);
       properties
+        .getOrCreate('shadowFollowCamera')
+        .setValue('false')
+        .setLabel(_('Shadows follow camera'))
+        .setDescription(
+          _(
+            'If disabled, directional shadow cascades stay fixed in world space (no shadow movement with the player).'
+          )
+        )
+        .setType('boolean')
+        .setGroup(_('Shadows'))
+        .setAdvanced(true);
+      properties
         .getOrCreate('shadowStabilizationStep')
         .setValue('0')
         .setLabel(_('Stabilization step'))
@@ -2449,6 +2473,43 @@ module.exports = {
         .setLabel(_('Shadow frustum size'))
         .setType('number')
         .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Shadows'))
+        .setAdvanced(true);
+      properties
+        .getOrCreate('maxShadowDistance')
+        .setValue('2000')
+        .setLabel(_('Max shadow distance'))
+        .setDescription(
+          _(
+            'Maximum world distance covered by cascaded directional shadows.'
+          )
+        )
+        .setType('number')
+        .setMeasurementUnit(gd.MeasurementUnit.getPixel())
+        .setGroup(_('Shadows'))
+        .setAdvanced(true);
+      properties
+        .getOrCreate('cascadeSplitLambda')
+        .setValue('0.7')
+        .setLabel(_('Cascade split lambda'))
+        .setDescription(
+          _(
+            'Blend between logarithmic and uniform cascade split distribution (0 to 1).'
+          )
+        )
+        .setType('number')
+        .setGroup(_('Shadows'))
+        .setAdvanced(true);
+      properties
+        .getOrCreate('shadowFollowLead')
+        .setValue('0.45')
+        .setLabel(_('Shadow follow lead'))
+        .setDescription(
+          _(
+            'Predictive follow amount for the shadow anchor so shadows keep up with fast player movement.'
+          )
+        )
+        .setType('number')
         .setGroup(_('Shadows'))
         .setAdvanced(true);
       properties
