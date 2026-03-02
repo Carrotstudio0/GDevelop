@@ -262,6 +262,11 @@ module.exports = {
         if (!behaviorContent.hasChild(propertyName)) {
           if (propertyName === 'enabled') {
             behaviorContent.addChild(propertyName).setBoolValue(true);
+          } else if (
+            propertyName === 'targetLayerName' ||
+            propertyName === 'targetEffectName'
+          ) {
+            behaviorContent.addChild(propertyName).setStringValue('');
           } else {
             behaviorContent.addChild(propertyName).setDoubleValue(0);
           }
@@ -291,6 +296,14 @@ module.exports = {
           return true;
         }
 
+        if (
+          propertyName === 'targetLayerName' ||
+          propertyName === 'targetEffectName'
+        ) {
+          behaviorContent.getChild(propertyName).setStringValue(newValue);
+          return true;
+        }
+
         return false;
       };
 
@@ -314,6 +327,12 @@ module.exports = {
         }
         if (!behaviorContent.hasChild('offDuration')) {
           behaviorContent.addChild('offDuration').setDoubleValue(0.1);
+        }
+        if (!behaviorContent.hasChild('targetLayerName')) {
+          behaviorContent.addChild('targetLayerName').setStringValue('');
+        }
+        if (!behaviorContent.hasChild('targetEffectName')) {
+          behaviorContent.addChild('targetEffectName').setStringValue('');
         }
 
         behaviorProperties
@@ -369,6 +388,32 @@ module.exports = {
           )
           .setType('Number')
           .setLabel(_('Off duration (seconds)'));
+        behaviorProperties
+          .getOrCreate('targetLayerName')
+          .setValue(behaviorContent.getChild('targetLayerName').getStringValue())
+          .setType('String')
+          .setLabel(_('Target layer name (optional)'))
+          .setDescription(
+            _(
+              'Optional explicit layer containing the SpotLight/PointLight effect. Leave empty to use the object layer.'
+            )
+          )
+          .setGroup(_('Advanced'))
+          .setAdvanced(true);
+        behaviorProperties
+          .getOrCreate('targetEffectName')
+          .setValue(
+            behaviorContent.getChild('targetEffectName').getStringValue()
+          )
+          .setType('String')
+          .setLabel(_('Target effect name (optional)'))
+          .setDescription(
+            _(
+              'Optional explicit effect name. Recommended when multiple 3D light effects exist on the same layer.'
+            )
+          )
+          .setGroup(_('Advanced'))
+          .setAdvanced(true);
 
         return behaviorProperties;
       };
@@ -380,6 +425,8 @@ module.exports = {
         behaviorContent.addChild('flickerStrength').setDoubleValue(0.4);
         behaviorContent.addChild('failChance').setDoubleValue(0.02);
         behaviorContent.addChild('offDuration').setDoubleValue(0.1);
+        behaviorContent.addChild('targetLayerName').setStringValue('');
+        behaviorContent.addChild('targetEffectName').setStringValue('');
       };
 
       const flickeringLight = extension
@@ -427,6 +474,36 @@ module.exports = {
         .addParameter('object', _('Object'), '', false)
         .addParameter('behavior', _('Behavior'), 'FlickeringLight')
         .setFunctionName('isEnabled');
+
+      flickeringLight
+        .addScopedAction(
+          'SetTargetLayerName',
+          _('Set target layer'),
+          _('Set the layer where the SpotLight/PointLight effect is searched.'),
+          _('Set flickering target layer of _PARAM0_ to _PARAM2_'),
+          _('Flickering light'),
+          'res/conditions/3d_box.svg',
+          'res/conditions/3d_box.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'FlickeringLight')
+        .addParameter('layer', _('Layer'), '', true)
+        .setFunctionName('setTargetLayerName');
+
+      flickeringLight
+        .addScopedAction(
+          'SetTargetEffectName',
+          _('Set target effect'),
+          _('Set the exact SpotLight/PointLight effect name to control.'),
+          _('Set flickering target effect of _PARAM0_ to _PARAM2_'),
+          _('Flickering light'),
+          'res/conditions/3d_box.svg',
+          'res/conditions/3d_box.svg'
+        )
+        .addParameter('object', _('Object'), '', false)
+        .addParameter('behavior', _('Behavior'), 'FlickeringLight')
+        .addParameter('layerEffectName', _('Light effect name'))
+        .setFunctionName('setTargetEffectName');
 
       flickeringLight
         .addExpressionAndConditionAndAction(
