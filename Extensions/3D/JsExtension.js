@@ -2388,7 +2388,7 @@ module.exports = {
         .setLabel(_('Shadow map size (base)'))
         .setDescription(
           _(
-            'Base map size used by cascaded shadows. Recommended values: 512, 1024, or 2048.'
+            'Base map size used by cascaded shadows. Recommended values: 512, 1024, 2048, or 4096 (high-end GPUs).'
           )
         )
         .setType('number')

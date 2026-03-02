@@ -66,6 +66,7 @@ namespace gdjs {
           ];
           private _cascadeFrustumSizes: float[] = [400, 1200, 2400];
           private _cascadeMapSizes: integer[] = [2048, 1024, 512];
+          private _maxRendererShadowMapSize: integer = 2048;
           private _hadPreviousCameraPosition = false;
           private _previousCameraX: float = 0;
           private _previousCameraY: float = 0;
@@ -133,74 +134,95 @@ namespace gdjs {
           }
 
           private _getClosestShadowMapSize(value: float): integer {
-            if (value <= 768) {
-              return 512;
+            const supportedSizes = [512, 1024, 2048, 4096];
+            const target = Math.max(512, value);
+            let closestSize = supportedSizes[0];
+            let closestDelta = Math.abs(target - closestSize);
+            for (let i = 1; i < supportedSizes.length; i++) {
+              const size = supportedSizes[i];
+              const delta = Math.abs(target - size);
+              if (delta < closestDelta) {
+                closestDelta = delta;
+                closestSize = size;
+              }
             }
-            if (value <= 1536) {
-              return 1024;
+            return this._clampShadowMapSizeToRenderer(closestSize);
+          }
+
+          private _clampShadowMapSizeToRenderer(size: integer): integer {
+            const safeRendererMax = Math.max(512, this._maxRendererShadowMapSize);
+            let clampedSize = 512;
+            while (clampedSize * 2 <= safeRendererMax) {
+              clampedSize *= 2;
             }
-            return 2048;
+            return Math.max(512, Math.min(size, clampedSize));
           }
 
           private _computeCascadeMapSize(cascadeIndex: integer): integer {
             const baseSize = this._getClosestShadowMapSize(this._shadowMapSize);
             if (cascadeIndex === 0) {
-              return Math.min(2048, baseSize * 2);
+              return this._clampShadowMapSizeToRenderer(baseSize * 2);
             }
             if (cascadeIndex === 1) {
-              return baseSize;
+              return this._clampShadowMapSizeToRenderer(baseSize);
             }
-            return Math.max(512, Math.floor(baseSize / 2));
+            return this._clampShadowMapSizeToRenderer(
+              Math.max(512, Math.floor(baseSize / 2))
+            );
           }
 
           private _computePracticalSplit(
             splitFactor: float,
+            nearDistance: float,
             maxDistance: float
           ): float {
             const safeSplitFactor = Math.max(0, Math.min(1, splitFactor));
+            const safeNearDistance = Math.max(0.01, nearDistance);
             const safeMaxDistance = Math.max(64, maxDistance);
-            const nearDistance = 1;
             const lambda = Math.max(0, Math.min(1, this._cascadeSplitLambda));
 
             const uniformSplit =
-              nearDistance +
-              (safeMaxDistance - nearDistance) * safeSplitFactor;
+              safeNearDistance +
+              (safeMaxDistance - safeNearDistance) * safeSplitFactor;
             const logarithmicSplit =
-              nearDistance *
-              Math.pow(safeMaxDistance / nearDistance, safeSplitFactor);
+              safeNearDistance *
+              Math.pow(safeMaxDistance / safeNearDistance, safeSplitFactor);
 
             return lambda * logarithmicSplit + (1 - lambda) * uniformSplit;
           }
 
-          private _updateCascadeRanges(): void {
-            const safeMaxShadowDistance = Math.max(64, this._maxShadowDistance);
+          private _updateCascadeRanges(layer: gdjs.RuntimeLayer): void {
+            const cameraNear = Math.max(0.01, layer.getCamera3DNearPlaneDistance());
+            const cameraFar = Math.max(
+              cameraNear + 1,
+              layer.getCamera3DFarPlaneDistance()
+            );
+            const safeMaxShadowDistance = Math.max(
+              cameraNear + 1,
+              Math.min(this._maxShadowDistance, cameraFar)
+            );
 
             const practicalSplit1 = this._computePracticalSplit(
               1 / csmCascadeCount,
+              cameraNear,
               safeMaxShadowDistance
             );
             const practicalSplit2 = this._computePracticalSplit(
               2 / csmCascadeCount,
+              cameraNear,
               safeMaxShadowDistance
             );
 
-            // Keep default coverage close to 0-200, 200-800, 800-2000 when max distance is 2000.
-            const baselineSplit1 = safeMaxShadowDistance * 0.1;
-            const baselineSplit2 = safeMaxShadowDistance * 0.4;
-
-            const split1 = Math.max(baselineSplit1, practicalSplit1);
-            const split2 = Math.max(baselineSplit2, practicalSplit2);
-
             const safeSplit1 = Math.max(
-              1,
-              Math.min(safeMaxShadowDistance - 2, split1)
+              cameraNear + 0.01,
+              Math.min(safeMaxShadowDistance - 0.02, practicalSplit1)
             );
             const safeSplit2 = Math.max(
-              safeSplit1 + 1,
-              Math.min(safeMaxShadowDistance - 1, split2)
+              safeSplit1 + 0.01,
+              Math.min(safeMaxShadowDistance - 0.01, practicalSplit2)
             );
 
-            this._cascadeRanges[0].near = 0;
+            this._cascadeRanges[0].near = cameraNear;
             this._cascadeRanges[0].far = safeSplit1;
             this._cascadeRanges[1].near = safeSplit1;
             this._cascadeRanges[1].far = safeSplit2;
@@ -253,10 +275,9 @@ namespace gdjs {
               Math.min(1, this._cascadeSplitLambda)
             );
 
-            this._updateCascadeRanges();
+            this._updateCascadeRanges(layer);
 
             const safeDistanceFromCamera = Math.max(10, this._distanceFromCamera);
-            const commonFarPadding = Math.max(500, this._maxShadowDistance * 0.5);
 
             for (let cascadeIndex = 0; cascadeIndex < this._lights.length; cascadeIndex++) {
               const light = this._lights[cascadeIndex];
@@ -265,12 +286,20 @@ namespace gdjs {
                 cascadeIndex
               );
               this._cascadeFrustumSizes[cascadeIndex] = cascadeFrustumSize;
+              const rangeDepth = Math.max(
+                1,
+                this._cascadeRanges[cascadeIndex].far -
+                  this._cascadeRanges[cascadeIndex].near
+              );
+              // Tight depth range improves shadow precision and reduces acne.
+              const depthExtent =
+                rangeDepth + Math.max(100, cascadeFrustumSize * 0.7);
 
-              light.shadow.camera.near = 1;
-              light.shadow.camera.far =
-                safeDistanceFromCamera +
-                this._cascadeRanges[cascadeIndex].far +
-                commonFarPadding;
+              light.shadow.camera.near = Math.max(
+                0.5,
+                safeDistanceFromCamera - depthExtent
+              );
+              light.shadow.camera.far = safeDistanceFromCamera + depthExtent;
               light.shadow.camera.right = cascadeFrustumSize / 2;
               light.shadow.camera.left = -cascadeFrustumSize / 2;
               light.shadow.camera.top = cascadeFrustumSize / 2;
@@ -367,20 +396,27 @@ namespace gdjs {
           private _applyCascadeShadowTuning(cascadeIndex: integer): void {
             const light = this._lights[cascadeIndex];
             const cascadeMapSize = this._cascadeMapSizes[cascadeIndex];
+            const cascadeFrustumSize = this._cascadeFrustumSizes[cascadeIndex];
+            const texelWorldSize = cascadeFrustumSize / Math.max(1, cascadeMapSize);
 
             const resolutionMultiplier =
               cascadeMapSize < 1024 ? 2 : cascadeMapSize < 2048 ? 1.25 : 1;
             const distanceMultiplier =
               cascadeIndex === 0 ? 1 : cascadeIndex === 1 ? 1.8 : 2.8;
+            const automaticBias = Math.max(0.00005, texelWorldSize * 0.0008);
 
             const baseBias = Math.max(
               this._minimumShadowBias,
-              0.0001 * (cascadeIndex + 1)
+              automaticBias
             );
             light.shadow.bias = -baseBias * resolutionMultiplier * distanceMultiplier;
 
             const baseNormalBias = Math.max(0, this._shadowNormalBias);
-            light.shadow.normalBias = baseNormalBias * (1 + cascadeIndex * 0.35);
+            const automaticNormalBias = texelWorldSize * 0.03;
+            light.shadow.normalBias = Math.max(
+              baseNormalBias * (1 + cascadeIndex * 0.35),
+              automaticNormalBias
+            );
 
             const baseRadius = Math.max(0, this._shadowRadius);
             const radiusMultiplier =
@@ -597,9 +633,6 @@ namespace gdjs {
           }
 
           private _ensureSoftShadowRenderer(target: gdjs.EffectsTarget): void {
-            if (!this._shadowCastingEnabled) {
-              return;
-            }
             const runtimeScene = target.getRuntimeScene();
             if (!runtimeScene || !runtimeScene.getGame) {
               return;
@@ -612,10 +645,27 @@ namespace gdjs {
             if (!threeRenderer || !threeRenderer.shadowMap) {
               return;
             }
+            const rendererMaxTextureSize =
+              threeRenderer.capabilities &&
+              typeof threeRenderer.capabilities.maxTextureSize === 'number'
+                ? threeRenderer.capabilities.maxTextureSize
+                : 2048;
+            this._maxRendererShadowMapSize = Math.max(
+              512,
+              rendererMaxTextureSize
+            );
+
+            if (!this._shadowCastingEnabled) {
+              return;
+            }
+
             threeRenderer.shadowMap.enabled = true;
             threeRenderer.shadowMap.autoUpdate = true;
-            // PCF soft shadows give better penumbra quality for dynamic cascades.
-            threeRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            // `radius` has effect with PCFShadowMap, while PCFSoftShadowMap gives built-in soft filtering.
+            threeRenderer.shadowMap.type =
+              this._shadowRadius > 1
+                ? THREE.PCFShadowMap
+                : THREE.PCFSoftShadowMap;
           }
 
           isEnabled(target: EffectsTarget): boolean {
@@ -692,9 +742,9 @@ namespace gdjs {
             );
 
             // CSM requires per-cascade cameras and map sizing to be refreshed when settings change.
+            this._ensureSoftShadowRenderer(target);
             this._updateShadowCamera(layer);
             this._updateShadowMapSize();
-            this._ensureSoftShadowRenderer(target);
             const lightSpaceBasis = this._computeLightSpaceBasis();
 
             for (let cascadeIndex = 0; cascadeIndex < this._lights.length; cascadeIndex++) {
