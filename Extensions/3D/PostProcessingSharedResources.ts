@@ -55,15 +55,7 @@ namespace gdjs {
     },
   };
 
-  const managedPassOrder: string[] = [
-    'SSAO',
-    'DOF',
-    'SSR',
-    'FOG',
-    'BLOOM',
-    'COLORGRADE',
-    'CHROMA',
-  ];
+  const managedPassOrder: string[] = ['SSAO', 'DOF', 'SSR', 'FOG', 'BLOOM'];
   const managedPassOrderMap = new Map<string, number>(
     managedPassOrder.map((id, index) => [id, index])
   );
