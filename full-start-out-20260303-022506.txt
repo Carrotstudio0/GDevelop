@@ -1,0 +1,165 @@
+
+> gdevelop-ide@0.1.0 start
+> npm run import-resources && concurrently "react-app-rewired start" "node scripts/watch-serve-GDJS-runtime.js" -n "editor,game engine" --kill-others
+
+
+> gdevelop-ide@0.1.0 import-resources
+> npm run make-version-metadata && npm run import-zipped-external-editors && npm run build-theme-resources && npm run make-service-worker && cd scripts && node import-libGD.js && node import-GDJS-Runtime.js && node import-monaco-editor.js && node import-zipped-external-libs.js
+
+
+> gdevelop-ide@0.1.0 make-version-metadata
+> cd scripts && node make-version-metadata.js
+
+✅ src/Version/VersionMetadata.js properly generated.
+
+> gdevelop-ide@0.1.0 import-zipped-external-editors
+> cd scripts && node import-zipped-editor.js piskel 5.5.228 b161dc74582e428a6d210cd1b74f052ca4aab301d0d522e0be87bdb4962d0fb7 && node import-zipped-editor.js jfxr 5.0.0-beta55 8ac12b557c2ddba958c6f0d3e0c5df8cf3369a65262dcb90cf5c8a7a7d20bdf6 && node import-zipped-editor.js yarn 5.0.134 ba8558cad00ec9b18cf3c6fd8647f8c1478ca67c894bca94a152a3740af209cc
+
+✅ piskel-editor already existing in public/external/piskel folder and up-to-date - skipping download
+✅ jfxr-editor already existing in public/external/jfxr folder and up-to-date - skipping download
+✅ yarn-editor already existing in public/external/yarn folder and up-to-date - skipping download
+
+> gdevelop-ide@0.1.0 build-theme-resources
+> node scripts/build-theme-resources.js
+
+
+css
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/DefaultDarkTheme/DefaultDarkThemeVariables.css
+
+js
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/DefaultDarkTheme/DefaultDarkThemeVariables.json
+
+css
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/DefaultLightTheme/DefaultLightThemeVariables.css
+
+js
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/DefaultLightTheme/DefaultLightThemeVariables.json
+
+css
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/BlueDarkTheme/BlueDarkThemeVariables.css
+
+js
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/BlueDarkTheme/BlueDarkThemeVariables.json
+
+css
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/NordTheme/NordThemeVariables.css
+
+js
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/NordTheme/NordThemeVariables.json
+
+css
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/SolarizedDarkTheme/SolarizedDarkThemeVariables.css
+
+js
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/SolarizedDarkTheme/SolarizedDarkThemeVariables.json
+
+css
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/OneDarkTheme/OneDarkThemeVariables.css
+
+js
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/OneDarkTheme/OneDarkThemeVariables.json
+
+css
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/RosePineTheme/RosePineThemeVariables.css
+
+js
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/RosePineTheme/RosePineThemeVariables.json
+
+css
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/DeepBlueTheme/DeepBlueThemeVariables.css
+
+js
+✔︎  C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\scripts/../src/UI/Theme/DeepBlueTheme/DeepBlueThemeVariables.json
+
+> gdevelop-ide@0.1.0 make-service-worker
+> cd scripts && node make-service-worker.js
+
+⚠️ workbox warning: One of the glob patterns doesn't match any files. Please remove or fix the following: {
+  "globDirectory": "../public",
+  "globPattern": "static/css/*.css",
+  "globIgnores": [
+    "**/node_modules/**/*",
+    "**/service-worker.js"
+  ]
+}
+ℹ️ 0 files will be precached, totaling 0 MB.
+🌐 Downloading pre-built libGD.js from https://s3.amazonaws.com/gdevelop-gdevelop.js (be patient)...
+ℹ️ Trying to download libGD.js for HEAD.
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/pr/post-processing-shaders-clean/commit/e483bcbe06f6460c9503c335fbe9d0f013bab420), try again later.
+Warning: Retrying libGD.js download from https://s3.amazonaws.com/gdevelop-gdevelop.js/pr/post-processing-shaders-clean/commit/e483bcbe06f6460c9503c335fbe9d0f013bab420 (attempt 2/3).
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/pr/post-processing-shaders-clean/commit/e483bcbe06f6460c9503c335fbe9d0f013bab420), try again later.
+Warning: Retrying libGD.js download from https://s3.amazonaws.com/gdevelop-gdevelop.js/pr/post-processing-shaders-clean/commit/e483bcbe06f6460c9503c335fbe9d0f013bab420 (attempt 3/3).
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/pr/post-processing-shaders-clean/commit/e483bcbe06f6460c9503c335fbe9d0f013bab420), try again later.
+ℹ️ Trying to download libGD.js for HEAD~1.
+⚠️ Can't find the branch of the associated commit - if you're in detached HEAD, you need to be on a branch instead.
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/582da1fd49c20717c785ab2a7c2de34d6acea432), try again later.
+Warning: Retrying libGD.js download from https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/582da1fd49c20717c785ab2a7c2de34d6acea432 (attempt 2/3).
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/582da1fd49c20717c785ab2a7c2de34d6acea432), try again later.
+Warning: Retrying libGD.js download from https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/582da1fd49c20717c785ab2a7c2de34d6acea432 (attempt 3/3).
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/582da1fd49c20717c785ab2a7c2de34d6acea432), try again later.
+ℹ️ Trying to download libGD.js for HEAD~2.
+⚠️ Can't find the branch of the associated commit - if you're in detached HEAD, you need to be on a branch instead.
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/7dee1ddec53667e2e66a514cfc91a396076c8c16), try again later.
+Warning: Retrying libGD.js download from https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/7dee1ddec53667e2e66a514cfc91a396076c8c16 (attempt 2/3).
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/7dee1ddec53667e2e66a514cfc91a396076c8c16), try again later.
+Warning: Retrying libGD.js download from https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/7dee1ddec53667e2e66a514cfc91a396076c8c16 (attempt 3/3).
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/7dee1ddec53667e2e66a514cfc91a396076c8c16), try again later.
+ℹ️ Trying to download libGD.js for HEAD~3.
+⚠️ Can't find the branch of the associated commit - if you're in detached HEAD, you need to be on a branch instead.
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/1eb199d49703a9867f69854d2fe6a3ef7eb0fb5c), try again later.
+Warning: Retrying libGD.js download from https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/1eb199d49703a9867f69854d2fe6a3ef7eb0fb5c (attempt 2/3).
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/1eb199d49703a9867f69854d2fe6a3ef7eb0fb5c), try again later.
+Warning: Retrying libGD.js download from https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/1eb199d49703a9867f69854d2fe6a3ef7eb0fb5c (attempt 3/3).
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/unknown-branch/commit/1eb199d49703a9867f69854d2fe6a3ef7eb0fb5c), try again later.
+ℹ️ Trying to download libGD.js from pr/post-processing-shaders-clean, latest build.
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/pr/post-processing-shaders-clean/latest), try again later.
+Warning: Retrying libGD.js download from https://s3.amazonaws.com/gdevelop-gdevelop.js/pr/post-processing-shaders-clean/latest (attempt 2/3).
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/pr/post-processing-shaders-clean/latest), try again later.
+Warning: Retrying libGD.js download from https://s3.amazonaws.com/gdevelop-gdevelop.js/pr/post-processing-shaders-clean/latest (attempt 3/3).
+⚠️ Can't download libGD.js (undefined) (baseUrl=https://s3.amazonaws.com/gdevelop-gdevelop.js/pr/post-processing-shaders-clean/latest), try again later.
+ℹ️ Trying to download libGD.js from master, latest build.
+✅ libGD.js downloaded and stored in public/libGD.js
+✅ Copied libGD.js to node_modules folder
+ℹ️ Cleaning destination first...
+ℹ️ Cleaning destination first...
+✅ GDJS built in 12481ms
+✅ GDJS built in 14655ms
+ℹ️ Copying GDJS and extensions runtime sources to C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\resources\GDJS, C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\newIDE\app\node_modules\GDJS-for-web-app-only...
+✅ Runtime source files copy done (490 file(s) copied in 12643ms).
+✅ Runtime source files copy done (490 file(s) copied in 13396ms).
+✅ Sources of Monaco Editor properly copied in public folder
+✅ Extracted zip.js.zip to public/external/ folder
+✅ Extracted zlib-asm.zip to public/external/ folder
+[game engine] ℹ️ GDJS Runtime served for the web-app at http://localhost:5002.
+[game engine] ✅ GDJS watcher ready in 2663.07ms.
+[game engine] ℹ️ Watching GDJS engine files for changes in:
+[game engine] - C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\GDJS\Runtime
+[game engine] - C:\Users\Tech Shop\Desktop\gdevelop\GDevelop\Extensions.
+[editor] (node:1940) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+[editor] (Use `node --trace-deprecation ...` to show where the warning was created)
+[editor] Browserslist: caniuse-lite is outdated. Please run:
+[editor]   npx update-browserslist-db@latest
+[editor]   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[editor] (node:1940) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+[editor] (node:1940) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+[editor] Starting the development server...
+[editor] 
+[editor] Compiled successfully!
+[editor] 
+[editor] You can now view gdevelop-ide in the browser.
+[editor] 
+[editor]   Local:            http://localhost:3000
+[editor]   On Your Network:  http://192.168.1.3:3000
+[editor] 
+[editor] Note that the development build is not optimized.
+[editor] To create a production build, use npm run build.
+[editor] 
+[editor] webpack compiled [1m[32msuccessfully[39m[22m
+[editor] ^C
+[game engine] 
+[game engine] ℹ️ Shutting GDJS Runtime file watcher and server...
+[editor] react-app-rewired start exited with code 3221225786
+--> Sending SIGTERM to other processes..
+[game engine] ✅ GDJS Runtime server closed.
+[game engine] ✅ GDJS Runtime watcher closed.
+[game engine] node scripts/watch-serve-GDJS-runtime.js exited with code 3221225786

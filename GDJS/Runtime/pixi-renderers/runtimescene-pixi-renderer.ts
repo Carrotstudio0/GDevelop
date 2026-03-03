@@ -236,11 +236,11 @@ namespace gdjs {
               // Clear the depth as each layer is independent and display on top of the previous one,
               // even 3D objects.
               threeRenderer.clearDepth();
-              if (runtimeLayerRenderer.hasPostProcessingPass()) {
-                threeEffectComposer.render();
-              } else {
-                threeRenderer.render(threeScene, threeCamera);
-              }
+              runtimeLayerRenderer.render3DLayer(
+                threeRenderer,
+                threeScene,
+                threeCamera
+              );
 
               this._layerRenderingMetrics.rendered3DLayersCount++;
 

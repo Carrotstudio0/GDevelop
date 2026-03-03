@@ -20,6 +20,8 @@ const PORT = 5002;
 
 const gdevelopRootPath = path.join(__dirname, '..', '..', '..');
 const gdjsRootPath = path.join(__dirname, '..', 'resources', 'GDJS');
+let isImportRunning = false;
+let hasPendingImport = false;
 
 // Serve the built files for GDJS.
 const server = http.createServer((request, response) => {
@@ -97,6 +99,25 @@ const importGDJSRuntime = () => {
   });
 };
 
+const runImportQueue = () => {
+  if (isImportRunning || !hasPendingImport) return;
+
+  isImportRunning = true;
+  hasPendingImport = false;
+
+  importGDJSRuntime()
+    .catch(error => {
+      console.error('Failed to update GDJS Runtime:', error.message);
+    })
+    .finally(() => {
+      isImportRunning = false;
+
+      if (hasPendingImport) {
+        runImportQueue();
+      }
+    });
+};
+
 /**
  * Callback for file changes, debounced to avoid running too frequently
  */
@@ -110,9 +131,8 @@ const onWatchEvent = debounce(
       `📁 Detected "${eventName}" in ${resolvedFilename}, updating GDJS Runtime...`
     );
 
-    importGDJSRuntime().catch(error => {
-      console.error('❌ Failed to update GDJS Runtime:', error.message);
-    });
+    hasPendingImport = true;
+    runImportQueue();
   },
   100 // Avoid running the script too much in case multiple changes are fired at the same time
 );

@@ -14,6 +14,7 @@ const destinationPaths = [
   path.join(__dirname, '..', 'resources', 'GDJS'),
   path.join(__dirname, '..', 'node_modules', 'GDJS-for-web-app-only'),
 ];
+const gdjsForWebAppOnlyPath = destinationPaths[1];
 
 // Clean the paths where GDJS Runtime (and extensions) will be copied/bundled.
 if (!args['skip-clean']) {
@@ -24,14 +25,34 @@ if (!args['skip-clean']) {
   });
 }
 
+// Ensure the editor-side runtime package has a package.json so webpack can
+// track it as a managed dependency under node_modules.
+const gdjsForWebAppOnlyPackageJsonPath = path.join(
+  gdjsForWebAppOnlyPath,
+  'package.json'
+);
+if (!shell.test('-f', gdjsForWebAppOnlyPackageJsonPath)) {
+  fs.writeFileSync(
+    gdjsForWebAppOnlyPackageJsonPath,
+    JSON.stringify(
+      {
+        name: 'GDJS-for-web-app-only',
+        private: true,
+      },
+      null,
+      2
+    ) + '\n'
+  );
+}
+
 // Build GDJS runtime (and extensions).
 destinationPaths.forEach(destinationPath => {
   const outPath = path.join(destinationPath, 'Runtime');
-  const output = shell.exec(`node scripts/build.js --out ${outPath}`, {
+  const output = shell.exec(`node scripts/build.js --out "${outPath}"`, {
     cwd: path.join(gdevelopRootPath, 'GDJS'),
   });
   if (output.code !== 0) {
-    shell.exit(0);
+    shell.exit(output.code);
   }
 });
 

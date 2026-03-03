@@ -215,6 +215,7 @@ namespace gdjs {
       | null = null;
     private _threeCameraDirty: boolean = false;
     private _threeEffectComposer: THREE_ADDONS.EffectComposer | null = null;
+    private _scene3DFSRUpscaler: gdjs.Scene3DFSRUpscaler | null = null;
 
     // For a 2D+3D layer, the 2D rendering is done on the render texture
     // and then must be displayed on a plane in the 3D world:
@@ -365,6 +366,144 @@ namespace gdjs {
       return this._threeEffectComposer.passes.length > emptyCount;
     }
 
+    private _ensureScene3DFSRUpscaler(): gdjs.Scene3DFSRUpscaler | null {
+      if (this._scene3DFSRUpscaler) {
+        return this._scene3DFSRUpscaler;
+      }
+
+      const upscalerConstructor = (gdjs as any).Scene3DFSRUpscaler;
+      if (typeof upscalerConstructor !== 'function') {
+        return null;
+      }
+
+      this._scene3DFSRUpscaler = new upscalerConstructor();
+      return this._scene3DFSRUpscaler;
+    }
+
+    private _updateThreeEffectComposerSize(): void {
+      if (!this._threeEffectComposer) {
+        return;
+      }
+
+      const game = this._layer.getRuntimeScene().getGame();
+      const threeRenderer = game.getRenderer().getThreeRenderer();
+      const canUseFSR = !!(
+        threeRenderer && (threeRenderer.capabilities as any).isWebGL2
+      );
+      let width = game.getGameResolutionWidth();
+      let height = game.getGameResolutionHeight();
+      if (
+        canUseFSR &&
+        this._scene3DFSRUpscaler &&
+        this._scene3DFSRUpscaler.isEnabled()
+      ) {
+        const renderScale = this._scene3DFSRUpscaler.getRenderScale();
+        width *= renderScale;
+        height *= renderScale;
+      }
+
+      this._threeEffectComposer.setPixelRatio(window.devicePixelRatio);
+      this._threeEffectComposer.setSize(
+        Math.max(1, width),
+        Math.max(1, height)
+      );
+    }
+
+    setScene3DFSRUpscalerConfig(
+      enabled: boolean,
+      renderScale: number,
+      sharpness: number
+    ): void {
+      const fsrUpscaler = this._ensureScene3DFSRUpscaler();
+      if (!fsrUpscaler) {
+        return;
+      }
+
+      const configChanged = fsrUpscaler.setConfig(
+        enabled,
+        renderScale,
+        sharpness
+      );
+      if (configChanged) {
+        this._updateThreeEffectComposerSize();
+      }
+    }
+
+    getScene3DFSRUpscalerConfig(): gdjs.Scene3DFSRUpscalerConfig {
+      const fsrUpscaler = this._ensureScene3DFSRUpscaler();
+      if (!fsrUpscaler) {
+        return {
+          enabled: false,
+          renderScale: 0.75,
+          sharpness: 0.8,
+        };
+      }
+      return fsrUpscaler.getConfig();
+    }
+
+    render3DLayer(
+      threeRenderer: THREE.WebGLRenderer,
+      threeScene: THREE.Scene,
+      threeCamera: THREE.Camera
+    ): void {
+      const fsrUpscaler = this._ensureScene3DFSRUpscaler();
+      if (fsrUpscaler && fsrUpscaler.isEnabled()) {
+        let sourceTexture: THREE.Texture | null = null;
+        let sourceWidth = 0;
+        let sourceHeight = 0;
+
+        const hasCustomPostProcessingPasses = this.hasPostProcessingPass();
+        if (this._threeEffectComposer && hasCustomPostProcessingPasses) {
+          const composerWithState = this
+            ._threeEffectComposer as THREE_ADDONS.EffectComposer & {
+            renderToScreen?: boolean;
+            readBuffer?: THREE.WebGLRenderTarget;
+          };
+          const previousRenderToScreen = composerWithState.renderToScreen;
+          composerWithState.renderToScreen = false;
+          this._threeEffectComposer.render();
+          composerWithState.renderToScreen = previousRenderToScreen;
+
+          const readBuffer = composerWithState.readBuffer;
+          if (readBuffer) {
+            sourceTexture = readBuffer.texture;
+            sourceWidth = readBuffer.width;
+            sourceHeight = readBuffer.height;
+          }
+        } else {
+          const sourceRenderTarget =
+            fsrUpscaler.renderSceneToSourceRenderTarget(
+              threeRenderer,
+              threeScene,
+              threeCamera
+            );
+          if (sourceRenderTarget) {
+            sourceTexture = sourceRenderTarget.texture;
+            sourceWidth = sourceRenderTarget.width;
+            sourceHeight = sourceRenderTarget.height;
+          }
+        }
+
+        if (
+          sourceTexture &&
+          fsrUpscaler.renderFromSource(
+            threeRenderer,
+            sourceTexture,
+            sourceWidth,
+            sourceHeight
+          )
+        ) {
+          return;
+        }
+      }
+
+      if (this.hasPostProcessingPass() && this._threeEffectComposer) {
+        this._threeEffectComposer.render();
+      } else {
+        threeRenderer.render(threeScene, threeCamera);
+      }
+    }
+
     /**
      * The sprite, displaying the "render texture" of the layer, to display
      * for a lighting layer.
@@ -430,6 +569,7 @@ namespace gdjs {
             );
           }
           this._threeCamera.rotation.order = 'ZYX';
+          this._ensureScene3DFSRUpscaler();
 
           const game = this._layer.getRuntimeScene().getGame();
           const threeRenderer = game.getRenderer().getThreeRenderer();
@@ -451,6 +591,7 @@ namespace gdjs {
               );
             }
             this._threeEffectComposer.addPass(new THREE_ADDONS.OutputPass());
+            this._updateThreeEffectComposerSize();
           }
 
           if (
@@ -987,14 +1128,7 @@ namespace gdjs {
     }
 
     updateResolution() {
-      if (this._threeEffectComposer) {
-        const game = this._layer.getRuntimeScene().getGame();
-        this._threeEffectComposer.setPixelRatio(window.devicePixelRatio);
-        this._threeEffectComposer.setSize(
-          game.getGameResolutionWidth(),
-          game.getGameResolutionHeight()
-        );
-      }
+      this._updateThreeEffectComposerSize();
     }
 
     isCameraRotatedIn3D() {

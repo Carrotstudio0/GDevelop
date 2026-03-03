@@ -2322,6 +2322,40 @@ module.exports = {
     }
     {
       const effect = extension
+        .addEffect('FSRUpscaler')
+        .setFullName(_('FSR upscaler'))
+        .setDescription(
+          _(
+            'Render 3D at a lower resolution then upscale with AMD FSR 1.0 (EASU + RCAS).'
+          )
+        )
+        .markAsNotWorkingForObjects()
+        .markAsOnlyWorkingFor3D()
+        .addIncludeFile('pixi-renderers/scene3d-fsr-upscaler.js')
+        .addIncludeFile('Extensions/3D/FSRUpscalerEffect.js');
+      const properties = effect.getProperties();
+      properties
+        .getOrCreate('enabled')
+        .setValue('true')
+        .setLabel(_('Enabled'))
+        .setType('boolean');
+      properties
+        .getOrCreate('renderScale')
+        .setValue('0.75')
+        .setLabel(_('Render scale'))
+        .setType('number')
+        .setDescription(
+          _('Scale from 0.5 to 1.0. Typical values: 0.5, 0.67, 0.75.')
+        );
+      properties
+        .getOrCreate('sharpness')
+        .setValue('0.8')
+        .setLabel(_('Sharpness'))
+        .setType('number')
+        .setDescription(_('RCAS attenuation from 0 to 2.'));
+    }
+    {
+      const effect = extension
         .addEffect('ScreenSpaceReflections')
         .setFullName(_('Screen-space reflections'))
         .setDescription(
